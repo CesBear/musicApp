@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
+import { supabase } from "@/lib/supabase"
 import { useEffect, useState } from "react"
 import { DEGREE_COLORS } from "@/data/scales"
 
@@ -51,6 +52,23 @@ const Icon = {
       <line x1="8" y1="4.5" x2="8" y2="14.5" stroke="currentColor" strokeWidth={active ? 1.7 : 1.4}/>
     </svg>
   ),
+  progress: ({ active }: IconProps) => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="10" width="3" height="4" rx="1" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
+      <rect x="6.5" y="7" width="3" height="7" rx="1" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
+      <rect x="11" y="3" width="3" height="11" rx="1" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
+    </svg>
+  ),
+  rhythm: ({ active }: IconProps) => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      {[0,1,2].map(row => [0,1,2].map(col => (
+        <rect key={`${row}-${col}`}
+          x={1.5 + col * 4.5} y={1.5 + row * 4.5} width={3} height={3} rx={0.7}
+          fill="currentColor"
+          opacity={(row + col) % 2 === 0 ? (active ? 1 : 0.85) : (active ? 0.35 : 0.25)}/>
+      )))}
+    </svg>
+  ),
   logout: () => (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <path d="M9 3 L4 3 L4 13 L9 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -64,7 +82,9 @@ const NAV = [
   { href: "/triadas",         label: "Tríadas",              icon: Icon.triads },
   { href: "/circulo-quintas", label: "Círculo de Quintas",   icon: Icon.circle },
   { href: "/chord-builder",   label: "Chord Builder",        icon: Icon.chord  },
-  { href: "/material",        label: "Material del Maestro", icon: Icon.book   },
+  { href: "/ritmos",           label: "Ritmos",               icon: Icon.rhythm },
+  { href: "/material",        label: "Material",             icon: Icon.book   },
+  { href: "/progreso",        label: "Mi Progreso",          icon: Icon.progress },
 ]
 
 const STORAGE_KEY = "mc_practice_days"
@@ -74,37 +94,35 @@ function getTodayKey() {
 }
 
 function usePracticeStreak() {
-  const [days, setDays]   = useState<string[]>([])
-  const [streak, setStreak] = useState(0)
+  const [days,    setDays]    = useState<string[]>([])
+  const [streak,  setStreak]  = useState(0)
   const [weekMin, setWeekMin] = useState(0)
 
   useEffect(() => {
-    // Mark today as practiced
-    const today = getTodayKey()
-    const stored: string[] = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]")
-    const updated = stored.includes(today) ? stored : [...stored, today]
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-    setDays(updated)
+    supabase
+      .from("practice_sessions")
+      .select("date, duration_min")
+      .then(({ data }) => {
+        if (!data) return
+        const uniqueDays = [...new Set(data.map(s => s.date))].sort().reverse()
+        setDays(uniqueDays)
 
-    // Calculate streak (consecutive days ending today)
-    const sorted = [...updated].sort().reverse()
-    let s = 0
-    let cursor = today
-    for (const d of sorted) {
-      if (d === cursor) {
-        s++
-        const prev = new Date(cursor)
-        prev.setDate(prev.getDate() - 1)
-        cursor = prev.toISOString().slice(0, 10)
-      } else if (d < cursor) break
-    }
-    setStreak(s)
+        // Streak: consecutive days ending today
+        let s = 0, cursor = getTodayKey()
+        const daySet = new Set(uniqueDays)
+        while (daySet.has(cursor)) {
+          s++
+          const d = new Date(cursor); d.setDate(d.getDate() - 1)
+          cursor = d.toISOString().slice(0, 10)
+        }
+        setStreak(s)
 
-    // Minutes this week (approximate: each session = 30 min)
-    const weekStart = new Date()
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay())
-    const weekDays = updated.filter(d => d >= weekStart.toISOString().slice(0, 10))
-    setWeekMin(weekDays.length * 30)
+        // Week minutes
+        const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - 6)
+        const wk = weekStart.toISOString().slice(0, 10)
+        const wMins = data.filter(s => s.date >= wk).reduce((a, s) => a + s.duration_min, 0)
+        setWeekMin(wMins)
+      })
   }, [])
 
   return { days, streak, weekMin }

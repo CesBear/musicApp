@@ -1,23 +1,41 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import ChordDiagram from "@/components/ChordDiagram"
-import { CHORD_VOICINGS, CHORD_TYPES, ROOT_NOTES, ChordType } from "@/data/chords"
+import { CHORD_VOICINGS, CHORD_TYPES, ROOT_NOTES, ChordType, ChordVoicing } from "@/data/chords"
 import { GUITAR_TUNING, NOTE_NAMES, DEGREE_COLORS } from "@/data/scales"
 import { playChord } from "@/lib/audio"
+
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"]
+
+function baseFretOf(v: ChordVoicing): number {
+  const active = v.frets.filter(f => f > 0)
+  return active.length ? Math.min(...active) : 0
+}
+
+function posLabel(v: ChordVoicing): string {
+  const bf = baseFretOf(v)
+  const fretStr = bf <= 1 ? "Abierta" : (ROMAN[bf] ?? `${bf}ª`)
+  return v.shape ? `${v.shape} · ${fretStr}` : fretStr
+}
 
 export default function ChordBuilderPage() {
   const [root, setRoot] = useState("A")
   const [type, setType] = useState<ChordType>("major")
+  const [posIdx, setPosIdx] = useState(0)
 
-  const voicing = CHORD_VOICINGS[root]?.[type]
-  const typeInfo = CHORD_TYPES.find(t => t.type === type)!
+  const voicings = CHORD_VOICINGS[root]?.[type] ?? []
+  const voicing  = voicings[posIdx] ?? voicings[0]
+
+  // Reset position when chord changes
+  useEffect(() => { setPosIdx(0) }, [root, type])
+
+  const typeInfo    = CHORD_TYPES.find(t => t.type === type)!
   const chordSymbol = typeInfo.symbol
 
-  const noteMap = NOTE_NAMES
   const chordNotes = voicing ? [...new Set(voicing.frets.map((f, i) => {
     if (f < 0) return null
-    return noteMap[(GUITAR_TUNING[i] + f) % 12]
+    return NOTE_NAMES[(GUITAR_TUNING[i] + f) % 12]
   }).filter(Boolean) as string[])] : []
 
   const handleStrum = () => { if (voicing) playChord(voicing.frets) }
@@ -82,6 +100,48 @@ export default function ChordBuilderPage() {
         })}
       </div>
 
+      {/* Position selector — shows all CAGED voicings for this chord */}
+      {voicings.length > 1 && (
+        <div className="mc-section">
+          <div className="mc-section-head">
+            <span className="mc-eyebrow">Posición en el mástil</span>
+            <span className="mc-section-hint">{voicings.length} posiciones</span>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {voicings.map((v, i) => {
+              const active = i === posIdx
+              const bf = baseFretOf(v)
+              return (
+                <button
+                  key={i}
+                  onClick={() => { setPosIdx(i); playChord(v.frets) }}
+                  style={{
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    gap: 3, padding: "10px 18px", borderRadius: 8, cursor: "pointer",
+                    border: active ? `1px solid ${DEGREE_COLORS[0]}` : "1px solid rgba(255,255,255,0.1)",
+                    background: active ? `${DEGREE_COLORS[0]}18` : "rgba(255,255,255,0.04)",
+                    transition: "all 0.15s",
+                  }}>
+                  <span style={{
+                    fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 13,
+                    color: active ? DEGREE_COLORS[0] : "rgba(255,255,255,0.85)",
+                    letterSpacing: "0.06em",
+                  }}>
+                    {v.shape ?? "—"}
+                  </span>
+                  <span style={{
+                    fontSize: 10, color: active ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.35)",
+                    fontFamily: "var(--font-mono)", letterSpacing: "0.08em",
+                  }}>
+                    {bf <= 1 ? "ABIERTA" : `TRASTE ${bf}`}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="mc-chord-main">
         <div className="mc-chord-diagram-card">
           {voicing ? (
@@ -108,7 +168,7 @@ export default function ChordBuilderPage() {
             <div className="mc-info-card">
               <p className="mc-info-label">Posiciones · Cuerda por cuerda</p>
               <div className="mc-strings">
-                {["E","A","D","G","B","e"].map((s, i) => {
+                {["E","A","D","G","B","e"].map((str, i) => {
                   const fret = voicing.frets[i]
                   const finger = voicing.fingers[i]
                   return (
@@ -117,7 +177,7 @@ export default function ChordBuilderPage() {
                         {fret === -1 ? "×" : fret === 0 ? "○" : fret}
                       </div>
                       {finger > 0 && fret > 0 && <div className="mc-string-finger">D{finger}</div>}
-                      <span className="mc-string-label">{s}</span>
+                      <span className="mc-string-label">{str}</span>
                     </div>
                   )
                 })}

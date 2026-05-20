@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import Fretboard from "@/components/Fretboard"
 import {
   NOTE_NAMES, SCALE_TYPES, SCALE_INFO, DEGREE_COLORS, DEGREE_LABELS,
   MAJOR_TRIADS, MINOR_TRIADS, INTERVAL_NAMES,
   getNoteName, getScalePositions,
 } from "@/data/scales"
-import { playScale, playTone, playMetronomeClick } from "@/lib/audio"
+import { playScale, playGuitarString } from "@/lib/audio"
+import Metronome from "@/components/Metronome"
 
 export default function EscalasPage() {
   const [rootIdx, setRootIdx] = useState(9)               // A
@@ -25,30 +26,6 @@ export default function EscalasPage() {
     { label: "D · A · E",  strings: new Set([2, 1, 0]), name: "Cuerdas 4–6" },
   ]
 
-  const [metronomeOn, setMetronomeOn] = useState(false)
-  const [bpm, setBpm] = useState(80)
-  const metroRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const beatRef = useRef(0)
-  const [beatTick, setBeatTick] = useState(0)
-
-  useEffect(() => {
-    if (metronomeOn) {
-      const ms = 60000 / bpm
-      beatRef.current = 0
-      metroRef.current = setInterval(() => {
-        const b = beatRef.current % 4
-        playMetronomeClick(b === 0)
-        beatRef.current += 1
-        setBeatTick(t => t + 1)
-      }, ms)
-    } else if (metroRef.current) {
-      clearInterval(metroRef.current)
-      metroRef.current = null
-      beatRef.current = 0
-      setBeatTick(0)
-    }
-    return () => { if (metroRef.current) clearInterval(metroRef.current) }
-  }, [metronomeOn, bpm])
 
   const scaleType = SCALE_TYPES[scaleTypeIdx]
   const info = SCALE_INFO[scaleType.name]
@@ -63,8 +40,6 @@ export default function EscalasPage() {
   const handleRoot = (i: number) => { setRootIdx(i); setPositionIdx(null) }
   const handleScale = (i: number) => { setScaleTypeIdx(i); setPositionIdx(null) }
   const handlePlay = () => playScale(rootIdx, scaleType.intervals, 3)
-  const currentBeat = (beatTick - 1) % 4
-
   const groups = [
     { label: "Diatónicas",     items: SCALE_TYPES.map((s, i) => ({ ...s, idx: i })).filter(s => s.group === "major" || s.group === "minor") },
     { label: "Pentatónicas",   items: SCALE_TYPES.map((s, i) => ({ ...s, idx: i })).filter(s => s.group === "pentatonic") },
@@ -96,23 +71,7 @@ export default function EscalasPage() {
             Escuchar escala
           </button>
 
-          <div className="mc-metronome">
-            <button className={`mc-metro-toggle ${metronomeOn ? "on" : ""}`} onClick={() => setMetronomeOn(v => !v)}>
-              <span className="mc-metro-icon">▣</span>
-              {metronomeOn ? "Detener" : "Metrónomo"}
-            </button>
-            <div className="mc-metro-bpm">
-              <input type="range" min="40" max="200" value={bpm} onChange={e => setBpm(+e.target.value)} className="mc-slider" />
-              <span className="mc-mono-tag" style={{ minWidth: 56, textAlign: "right" }}>{bpm} BPM</span>
-            </div>
-            {metronomeOn && (
-              <div className="mc-beat-dots">
-                {[0,1,2,3].map(b => (
-                  <span key={b} className={`mc-beat ${currentBeat === b ? "active" : ""} ${b === 0 ? "accent" : ""}`} />
-                ))}
-              </div>
-            )}
-          </div>
+          <Metronome />
         </div>
       </div>
 
@@ -241,7 +200,7 @@ export default function EscalasPage() {
           displayMode={displayMode}
           focusMode={focusMode}
           activeStrings={activeStrings}
-          onNoteClick={(n) => playTone(n.midi + 12, 0, 0.5, 0.2)}
+          onNoteClick={(n) => playGuitarString(n.midi + 12, 0, 0.13)}
         />
 
         <div className="mc-legend">
