@@ -89,7 +89,6 @@ const NAV = [
   { href: "/triadas",         label: "Tríadas",              icon: Icon.triads },
   { href: "/circulo-quintas", label: "Círculo de Quintas",   icon: Icon.circle },
   { href: "/chord-builder",   label: "Chord Builder",        icon: Icon.chord  },
-  { href: "/ritmos",           label: "Ritmos",               icon: Icon.rhythm },
   { href: "/lector",           label: "Lector GP",            icon: Icon.tab    },
   { href: "/material",        label: "Material",             icon: Icon.book   },
   { href: "/progreso",        label: "Mi Progreso",          icon: Icon.progress },
