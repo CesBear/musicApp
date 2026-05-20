@@ -8,11 +8,8 @@ interface Props {
   onClear: () => void
 }
 
-// PlayerState enum from alphaTab: Paused = 0, Playing = 1
 type PlayState = "stopped" | "playing" | "paused"
 
-// Load the alphaTab UMD script once and resolve when ready.
-// Using the UMD build from /public avoids any Turbopack bundling issues.
 let atScriptPromise: Promise<void> | null = null
 function loadAlphaTabScript(): Promise<void> {
   if (atScriptPromise) return atScriptPromise
@@ -23,9 +20,9 @@ function loadAlphaTabScript(): Promise<void> {
     const existing = document.getElementById("alphatab-umd")
     if (existing) { existing.addEventListener("load", () => resolve()); return }
     const s = document.createElement("script")
-    s.id  = "alphatab-umd"
+    s.id = "alphatab-umd"
     s.src = "/alphatab/alphaTab.min.js"
-    s.onload  = () => resolve()
+    s.onload = () => resolve()
     s.onerror = () => reject(new Error("alphaTab script failed to load"))
     document.head.appendChild(s)
   })
@@ -33,34 +30,39 @@ function loadAlphaTabScript(): Promise<void> {
 }
 
 export default function GuitarProViewer({ file, onClear }: Props) {
-  const containerRef  = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const apiRef        = useRef<any>(null)
-  // If a file arrives before the api is ready, queue it here
-  const pendingFile   = useRef<File | null>(null)
-  const [ready,       setReady]      = useState(false)
-  const [loaded,      setLoaded]     = useState(false)
-  const [playState,   setPlayState]  = useState<PlayState>("stopped")
-  const [sfProgress,  setSfProgress] = useState(0)
-  const [title,       setTitle]      = useState("")
-  const [trackCount,  setTrackCount] = useState(0)
-  const [error,       setError]      = useState<string | null>(null)
+  const apiRef       = useRef<any>(null)
+  const apiReadyRef  = useRef(false)   // true once AlphaTabApi is constructed
+  const pendingFile  = useRef<File | null>(null)
 
-  // Track whether alphaTab's player is fully ready to accept load() calls
-  const playerReadyRef = useRef(false)
+  const [loaded,     setLoaded]    = useState(false)
+  const [playState,  setPlayState] = useState<PlayState>("stopped")
+  const [sfProgress, setSfProgress]= useState(0)
+  const [title,      setTitle]     = useState("")
+  const [trackCount, setTrackCount]= useState(0)
+  const [error,      setError]     = useState<string | null>(null)
 
-  const loadFile = useCallback((api: unknown, f: File) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = (api as any).load(f)
-    // load() returns false when the data type isn't supported — fall back to ArrayBuffer
-    if (result === false) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(api as any).load(new Uint8Array(e.target?.result as ArrayBuffer), [0])
+  // Read file as Uint8Array and pass it to api.load().
+  // Using FileReader is more reliable than passing a File object,
+  // because alphaTab's Blob.arrayBuffer() path is async-fire-and-forget
+  // and errors surface differently.
+  const loadFileBytes = useCallback((f: File) => {
+    const api = apiRef.current
+    if (!api) return
+    setError(null)
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const bytes = new Uint8Array(e.target?.result as ArrayBuffer)
+      try {
+        const ok = api.load(bytes)
+        if (ok === false) setError("Formato no reconocido. ¿Es un archivo Guitar Pro válido?")
+      } catch (err) {
+        setError(`Error al cargar: ${err}`)
       }
-      reader.readAsArrayBuffer(f)
     }
+    reader.onerror = () => setError("No se pudo leer el archivo.")
+    reader.readAsArrayBuffer(f)
   }, [])
 
   const initApi = useCallback(() => {
@@ -69,73 +71,65 @@ export default function GuitarProViewer({ file, onClear }: Props) {
     const at = (window as any).alphaTab
     if (!at) { setError("No se pudo cargar el motor de notación."); return }
 
+    const origin = window.location.origin
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const api = new at.AlphaTabApi(containerRef.current, {
       core: {
-        // alphaTab creates a Blob Worker that calls importScripts(scriptFile).
-        // importScripts inside a Blob Worker requires a fully-qualified URL —
-        // relative paths like '/alphatab/...' resolve against blob: and fail.
-        scriptFile:    `${window.location.origin}/alphatab/alphaTab.min.js`,
-        fontDirectory: `${window.location.origin}/alphatab/font/`,
+        scriptFile:    `${origin}/alphatab/alphaTab.min.js`,
+        fontDirectory: `${origin}/alphatab/font/`,
       },
       player: {
         enablePlayer: true,
-        soundFont:    `${window.location.origin}/alphatab/sonivox.sf3`,
-        scrollElement: containerRef.current,
+        soundFont:    `${origin}/alphatab/sonivox.sf3`,
       },
     })
 
-    apiRef.current = api
+    apiRef.current  = api
+    apiReadyRef.current = true
 
-    // Catch any error alphaTab emits (format not recognised, corrupt file, etc.)
-    if (api.error) {
+    // Catch alphaTab errors (importer not found, corrupt file, etc.)
+    try {
       api.error.on((e: Error) => {
-        console.error("[alphaTab]", e)
+        console.error("[alphaTab error]", e)
         setError(`Error: ${e?.message ?? String(e)}`)
       })
-    }
+    } catch { /**/ }
 
-    api.soundFontLoad.on((e: { loaded: number; total: number }) => {
+    api.soundFontLoad?.on((e: { loaded: number; total: number }) => {
       if (e.total > 0) setSfProgress(Math.round((e.loaded / e.total) * 100))
     })
 
-    // playerReady is the correct moment to call load() — alphaTab's pipeline
-    // is fully initialized only after this event fires.
-    api.playerReady.on(() => {
-      setReady(true)
-      playerReadyRef.current = true
-      if (pendingFile.current) {
-        loadFile(api, pendingFile.current)
-        pendingFile.current = null
-      }
-    })
+    api.playerReady?.on(() => { /* player audio ready */ })
 
-    api.scoreLoaded.on((score: { title?: string; tracks?: unknown[] }) => {
+    api.scoreLoaded?.on((score: { title?: string; tracks?: unknown[] }) => {
       setLoaded(true)
       setTitle(score.title ?? "")
       setTrackCount(score.tracks?.length ?? 0)
     })
 
-    api.playerStateChanged.on((e: { state: number; stopped: boolean }) => {
-      if (e.stopped) {
-        setPlayState("stopped")
-      } else {
-        setPlayState(e.state === 1 ? "playing" : "paused")
-      }
+    api.playerStateChanged?.on((e: { state: number; stopped: boolean }) => {
+      if (e.stopped) setPlayState("stopped")
+      else setPlayState(e.state === 1 ? "playing" : "paused")
     })
-  }, [loadFile])
 
-  // Load UMD script once, then init alphaTab
+    // Load any file that arrived before the api was ready
+    if (pendingFile.current) {
+      const f = pendingFile.current
+      pendingFile.current = null
+      // Small delay lets alphaTab finish internal sync setup after construction
+      setTimeout(() => loadFileBytes(f), 50)
+    }
+  }, [loadFileBytes])
+
   useEffect(() => {
     let cancelled = false
     loadAlphaTabScript()
-      .then(() => {
-        if (!cancelled) initApi()
-      })
-      .catch(() => {
-        if (!cancelled) setError("Error al cargar alphaTab desde /public.")
-      })
+      .then(() => { if (!cancelled) initApi() })
+      .catch(() => { if (!cancelled) setError("Error al cargar el motor de notación.") })
     return () => {
       cancelled = true
+      apiReadyRef.current = false
       if (apiRef.current) {
         try { apiRef.current.destroy() } catch { /**/ }
         apiRef.current = null
@@ -145,23 +139,20 @@ export default function GuitarProViewer({ file, onClear }: Props) {
 
   useEffect(() => {
     if (!file) return
-    setLoaded(false); setTitle(""); setTrackCount(0); setPlayState("stopped"); setError(null)
+    setLoaded(false); setTitle(""); setTrackCount(0); setPlayState("stopped"); setError(null); setSfProgress(0)
 
-    if (apiRef.current && playerReadyRef.current) {
-      // api is fully ready — load immediately
-      loadFile(apiRef.current, file)
+    if (apiReadyRef.current) {
+      loadFileBytes(file)
     } else {
-      // api still initializing — store and load once playerReady fires
       pendingFile.current = file
     }
-  }, [file, loadFile])
+  }, [file, loadFileBytes])
 
   const handlePlayPause = () => apiRef.current?.playPause()
-  const handleStop      = () => { apiRef.current?.stop(); setPlayState("stopped") }
+  const handleStop = () => { apiRef.current?.stop(); setPlayState("stopped") }
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Transport */}
       <div style={{
         display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
         padding: "12px 16px",
@@ -169,29 +160,21 @@ export default function GuitarProViewer({ file, onClear }: Props) {
         border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 10,
       }}>
-        <button
-          onClick={handlePlayPause}
-          disabled={!loaded}
-          className="mc-play-btn"
+        <button onClick={handlePlayPause} disabled={!loaded} className="mc-play-btn"
           style={{
             opacity: loaded ? 1 : 0.4,
             background: playState === "playing" ? "rgba(255,80,80,0.15)" : undefined,
             borderColor: playState === "playing" ? "rgba(255,80,80,0.4)" : undefined,
             color: playState === "playing" ? "#ff6060" : undefined,
-          }}
-        >
+          }}>
           {playState === "playing"
             ? <><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="1" width="3" height="10" fill="currentColor"/><rect x="7" y="1" width="3" height="10" fill="currentColor"/></svg> Pausar</>
             : <><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2 L11 7 L3 12 Z" fill="currentColor"/></svg> {playState === "paused" ? "Continuar" : "Play"}</>
           }
         </button>
 
-        <button
-          onClick={handleStop}
-          disabled={playState === "stopped"}
-          className="mc-btn-ghost"
-          style={{ opacity: playState !== "stopped" ? 1 : 0.3, padding: "6px 12px" }}
-        >
+        <button onClick={handleStop} disabled={playState === "stopped"} className="mc-btn-ghost"
+          style={{ opacity: playState !== "stopped" ? 1 : 0.3, padding: "6px 12px" }}>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <rect x="1" y="1" width="10" height="10" rx="1" fill="currentColor"/>
           </svg>
@@ -204,9 +187,9 @@ export default function GuitarProViewer({ file, onClear }: Props) {
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginLeft: 10, fontFamily: "var(--font-mono)" }}>
                 {trackCount} {trackCount === 1 ? "pista" : "pistas"}
               </span>
-              {!ready && (
+              {sfProgress > 0 && sfProgress < 100 && (
                 <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginLeft: 10, fontFamily: "var(--font-mono)" }}>
-                  · Cargando sonidos {sfProgress}%…
+                  · Sonidos {sfProgress}%…
                 </span>
               )}
             </>
@@ -214,7 +197,7 @@ export default function GuitarProViewer({ file, onClear }: Props) {
             <span style={{ fontSize: 12, color: "#ff6060" }}>{error}</span>
           ) : (
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-mono)" }}>
-              {sfProgress > 0 && sfProgress < 100 ? `Cargando sonidos ${sfProgress}%…` : "Procesando archivo…"}
+              Procesando {file.name}…
             </span>
           )}
         </div>
@@ -224,25 +207,14 @@ export default function GuitarProViewer({ file, onClear }: Props) {
         </button>
       </div>
 
-      {/* Notation container — alphaTab renders into this div */}
-      <div style={{
-        background: "#fff",
-        borderRadius: 10,
-        overflow: "auto",
-        minHeight: 200,
-        border: "1px solid rgba(255,255,255,0.06)",
-      }}>
+      <div style={{ background: "#fff", borderRadius: 10, overflow: "auto", minHeight: 200, border: "1px solid rgba(255,255,255,0.06)" }}>
         <div ref={containerRef} />
       </div>
 
       <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-        {[
-          ["Formatos", ".gp3 · .gp4 · .gp5 · .gpx · .gp"],
-          ["Privacidad", "Procesado local — no se sube nada"],
-        ].map(([label, val]) => (
+        {[["Formatos", ".gp3 · .gp4 · .gp5 · .gpx · .gp"], ["Privacidad", "Procesado local — no se sube nada"]].map(([label, val]) => (
           <span key={label} style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-            <span style={{ color: DEGREE_COLORS[0], marginRight: 6, fontFamily: "var(--font-mono)" }}>{label}</span>
-            {val}
+            <span style={{ color: DEGREE_COLORS[0], marginRight: 6, fontFamily: "var(--font-mono)" }}>{label}</span>{val}
           </span>
         ))}
       </div>
