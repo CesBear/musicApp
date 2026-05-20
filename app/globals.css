@@ -1095,10 +1095,10 @@ body::before {
    ──────────────────────────────────────────────────────────── */
 
 .mc-login-stage-v2 {
-  position: relative;
-  min-height: 100vh;
+  position: fixed;
+  inset: 0;
   display: grid; place-items: center;
-  overflow: hidden;
+  overflow: auto;
   background:
     radial-gradient(ellipse 80% 60% at 50% 30%, oklch(0.22 0.025 60), oklch(0.11 0.005 60) 70%);
 }
