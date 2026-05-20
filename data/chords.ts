@@ -18,7 +18,7 @@ const em7   = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: p===0?[0,2,0,
 const esus4 = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: p===0?[0,2,2,2,0,0]:[p,p+2,p+2,p+2,p,p],         fingers: p===0?[0,1,2,3,0,0]:[1,2,3,4,1,1],       barre: p>0?{fret:p,from:0,to:5}:undefined })
 const esus2 = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: p===0?[0,2,4,4,0,0]:[p,p+2,p+4,p+4,p,p],         fingers: p===0?[0,1,3,4,0,0]:[1,2,4,4,1,1],       barre: p>0?{fret:p,from:0,to:5}:undefined })
 const eadd9 = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: p===0?[0,2,2,1,0,2]:[p,p+2,p+2,p+1,p,p+2],       fingers: p===0?[0,2,3,1,0,4]:[1,3,4,2,1,4],       barre: p>0?{fret:p,from:0,to:4}:undefined })
-const e6    = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: p===0?[0,2,2,1,2,0]:[p,p+2,p+2,p+1,p+2,p],       fingers: p===0?[0,1,2,0,3,0]:[1,2,3,0,4,1],       barre: p>0?{fret:p,from:0,to:5}:undefined })
+const e6    = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: p===0?[0,2,2,1,2,0]:[p,p+2,p+2,p+1,p+2,p],       fingers: p===0?[0,2,3,1,4,0]:[1,3,4,2,4,1],       barre: p>0?{fret:p,from:0,to:5}:undefined })
 const e9    = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: p===0?[0,2,0,1,0,2]:[p,p+2,p,p+1,p,p+2],         fingers: p===0?[0,2,0,1,0,3]:[1,3,1,2,1,4],       barre: p>0?{fret:p,from:0,to:5}:undefined })
 
 // ─── A-shape generators (root on string 5 at fret p) ───────────────────────
@@ -125,10 +125,10 @@ export const CHORD_VOICINGS: Record<string, Record<ChordType, ChordVoicing[]>> =
     "9":   [ s(e9(2),"E"),    s(a9(9),"A")  ],
   },
   G: {
-    major: [ s({frets:[3,2,0,0,0,3],fingers:[2,1,0,0,0,3]},"G"),  s(e(3),"E"),     s(a(10),"A") ],
+    major: [ s({frets:[3,2,0,0,0,3],fingers:[2,1,0,0,0,4]},"G"),  s(e(3),"E"),     s(a(10),"A") ],
     minor: [ s(em(3),"E"),    s(am(10),"A") ],
     dom7:  [ s({frets:[3,2,0,0,0,1],fingers:[3,2,0,0,0,1]},"G"),  s(e7(3),"E"),    s(a7(10),"A") ],
-    maj7:  [ s({frets:[3,2,0,0,0,2],fingers:[3,2,0,0,0,1]},"G"),  s(emaj7(3),"E"), s(amaj7(10),"A") ],
+    maj7:  [ s({frets:[3,2,0,0,0,2],fingers:[3,2,0,0,0,4]},"G"),  s(emaj7(3),"E"), s(amaj7(10),"A") ],
     m7:    [ s(em7(3),"E"),   s(am7(10),"A") ],
     sus2:  [ s(esus2(3),"E"), s(asus2(10),"A") ],
     sus4:  [ s(esus4(3),"E"), s(asus4(10),"A") ],
