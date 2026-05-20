@@ -34,7 +34,7 @@ export default function LectorPage() {
             <span style={{ color: DEGREE_COLORS[0] }}>Guitar</span>
             <span style={{ color: "rgba(255,255,255,0.85)", fontStyle: "italic" }}> Pro</span>
           </h1>
-          <p className="mc-lede">Abre cualquier archivo Guitar Pro y visualiza notación, TAB y playback directamente en el navegador.</p>
+          <p className="mc-lede">Abre cualquier archivo Guitar Pro y visualiza notación y TAB directamente en el navegador.</p>
           <div className="mc-meta-row">
             <span className="mc-mono-tag">.gp · .gp3 · .gp4 · .gp5 · .gpx</span>
             <span className="mc-meta-sep">·</span>
