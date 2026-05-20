@@ -54,10 +54,9 @@ export default function GuitarProViewer({ file, onClear }: Props) {
 
     const api = new at.AlphaTabApi(containerRef.current, {
       core: {
-        // Point to worker-specific ESM file — avoids running the full UMD
-        // bundle (which accesses window/document) inside a Web Worker context.
-        // alphaTab detects .mjs and uses { type: 'module' } automatically.
-        scriptFile:    "/alphatab/alphaTab.worker.min.mjs",
+        // Classic worker — must use the UMD .js build, not the ESM .mjs.
+        // importScripts() (used by classic workers) rejects .mjs URLs.
+        scriptFile:    "/alphatab/alphaTab.min.js",
         fontDirectory: "/alphatab/font/",
       },
       player: {
