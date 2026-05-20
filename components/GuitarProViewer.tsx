@@ -33,9 +33,11 @@ function loadAlphaTabScript(): Promise<void> {
 }
 
 export default function GuitarProViewer({ file, onClear }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef  = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const apiRef        = useRef<any>(null)
+  // If a file arrives before the api is ready, queue it here
+  const pendingFile   = useRef<File | null>(null)
   const [ready,       setReady]      = useState(false)
   const [loaded,      setLoaded]     = useState(false)
   const [playState,   setPlayState]  = useState<PlayState>("stopped")
@@ -52,7 +54,10 @@ export default function GuitarProViewer({ file, onClear }: Props) {
 
     const api = new at.AlphaTabApi(containerRef.current, {
       core: {
-        scriptFile:    "/alphatab/alphaTab.min.js",
+        // Point to worker-specific ESM file — avoids running the full UMD
+        // bundle (which accesses window/document) inside a Web Worker context.
+        // alphaTab detects .mjs and uses { type: 'module' } automatically.
+        scriptFile:    "/alphatab/alphaTab.worker.min.mjs",
         fontDirectory: "/alphatab/font/",
       },
       player: {
@@ -85,6 +90,12 @@ export default function GuitarProViewer({ file, onClear }: Props) {
         setPlayState(e.state === 1 ? "playing" : "paused")
       }
     })
+
+    // If a file was selected before the api finished initializing, load it now
+    if (pendingFile.current) {
+      api.load(pendingFile.current)
+      pendingFile.current = null
+    }
   }, [])
 
   // Load UMD script once, then init alphaTab
@@ -106,31 +117,18 @@ export default function GuitarProViewer({ file, onClear }: Props) {
     }
   }, [initApi])
 
-  // Load file whenever it changes (or after api is ready)
+  // Load file whenever it changes.
+  // Pass the File object directly — alphaTab's browser impl reads it internally
+  // and uses file.name to detect the GP format (gp3/4/5/gpx/gp).
   useEffect(() => {
     if (!file) return
     setLoaded(false); setTitle(""); setTrackCount(0); setPlayState("stopped"); setError(null)
 
-    const tryLoad = () => {
-      if (!apiRef.current) return
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          apiRef.current?.load(new Uint8Array(e.target?.result as ArrayBuffer))
-        } catch (err) {
-          setError(`Error al leer el archivo: ${err}`)
-        }
-      }
-      reader.onerror = () => setError("No se pudo leer el archivo.")
-      reader.readAsArrayBuffer(file)
-    }
-
-    // If api isn't init'd yet, wait briefly
     if (apiRef.current) {
-      tryLoad()
+      apiRef.current.load(file)
     } else {
-      const timer = setTimeout(tryLoad, 600)
-      return () => clearTimeout(timer)
+      // api not ready yet — store it and initApi will pick it up
+      pendingFile.current = file
     }
   }, [file])
 
