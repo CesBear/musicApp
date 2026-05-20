@@ -54,9 +54,10 @@ export default function GuitarProViewer({ file, onClear }: Props) {
 
     const api = new at.AlphaTabApi(containerRef.current, {
       core: {
-        // Classic worker — must use the UMD .js build, not the ESM .mjs.
-        // importScripts() (used by classic workers) rejects .mjs URLs.
-        scriptFile:    "/alphatab/alphaTab.min.js",
+        // alphaTab creates a Blob Worker that calls importScripts(scriptFile).
+        // importScripts inside a Blob Worker requires a fully-qualified URL —
+        // relative paths like '/alphatab/...' resolve against blob: and fail.
+        scriptFile:    `${window.location.origin}/alphatab/alphaTab.min.js`,
         fontDirectory: "/alphatab/font/",
       },
       player: {
