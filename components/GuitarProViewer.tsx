@@ -46,6 +46,23 @@ export default function GuitarProViewer({ file, onClear }: Props) {
   const [trackCount,  setTrackCount] = useState(0)
   const [error,       setError]      = useState<string | null>(null)
 
+  // Track whether alphaTab's player is fully ready to accept load() calls
+  const playerReadyRef = useRef(false)
+
+  const loadFile = useCallback((api: unknown, f: File) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (api as any).load(f)
+    // load() returns false when the data type isn't supported — fall back to ArrayBuffer
+    if (result === false) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(api as any).load(new Uint8Array(e.target?.result as ArrayBuffer), [0])
+      }
+      reader.readAsArrayBuffer(f)
+    }
+  }, [])
+
   const initApi = useCallback(() => {
     if (!containerRef.current) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,22 +75,39 @@ export default function GuitarProViewer({ file, onClear }: Props) {
         // importScripts inside a Blob Worker requires a fully-qualified URL —
         // relative paths like '/alphatab/...' resolve against blob: and fail.
         scriptFile:    `${window.location.origin}/alphatab/alphaTab.min.js`,
-        fontDirectory: "/alphatab/font/",
+        fontDirectory: `${window.location.origin}/alphatab/font/`,
       },
       player: {
         enablePlayer: true,
-        soundFont:    "/alphatab/sonivox.sf3",
+        soundFont:    `${window.location.origin}/alphatab/sonivox.sf3`,
         scrollElement: containerRef.current,
       },
     })
 
     apiRef.current = api
 
+    // Catch any error alphaTab emits (format not recognised, corrupt file, etc.)
+    if (api.error) {
+      api.error.on((e: Error) => {
+        console.error("[alphaTab]", e)
+        setError(`Error: ${e?.message ?? String(e)}`)
+      })
+    }
+
     api.soundFontLoad.on((e: { loaded: number; total: number }) => {
       if (e.total > 0) setSfProgress(Math.round((e.loaded / e.total) * 100))
     })
 
-    api.playerReady.on(() => setReady(true))
+    // playerReady is the correct moment to call load() — alphaTab's pipeline
+    // is fully initialized only after this event fires.
+    api.playerReady.on(() => {
+      setReady(true)
+      playerReadyRef.current = true
+      if (pendingFile.current) {
+        loadFile(api, pendingFile.current)
+        pendingFile.current = null
+      }
+    })
 
     api.scoreLoaded.on((score: { title?: string; tracks?: unknown[] }) => {
       setLoaded(true)
@@ -81,8 +115,6 @@ export default function GuitarProViewer({ file, onClear }: Props) {
       setTrackCount(score.tracks?.length ?? 0)
     })
 
-    // PlayerStateChangedEventArgs: { state: PlayerState, stopped: boolean }
-    // PlayerState: Paused = 0, Playing = 1
     api.playerStateChanged.on((e: { state: number; stopped: boolean }) => {
       if (e.stopped) {
         setPlayState("stopped")
@@ -90,13 +122,7 @@ export default function GuitarProViewer({ file, onClear }: Props) {
         setPlayState(e.state === 1 ? "playing" : "paused")
       }
     })
-
-    // If a file was selected before the api finished initializing, load it now
-    if (pendingFile.current) {
-      api.load(pendingFile.current)
-      pendingFile.current = null
-    }
-  }, [])
+  }, [loadFile])
 
   // Load UMD script once, then init alphaTab
   useEffect(() => {
@@ -117,20 +143,18 @@ export default function GuitarProViewer({ file, onClear }: Props) {
     }
   }, [initApi])
 
-  // Load file whenever it changes.
-  // Pass the File object directly — alphaTab's browser impl reads it internally
-  // and uses file.name to detect the GP format (gp3/4/5/gpx/gp).
   useEffect(() => {
     if (!file) return
     setLoaded(false); setTitle(""); setTrackCount(0); setPlayState("stopped"); setError(null)
 
-    if (apiRef.current) {
-      apiRef.current.load(file)
+    if (apiRef.current && playerReadyRef.current) {
+      // api is fully ready — load immediately
+      loadFile(apiRef.current, file)
     } else {
-      // api not ready yet — store it and initApi will pick it up
+      // api still initializing — store and load once playerReady fires
       pendingFile.current = file
     }
-  }, [file])
+  }, [file, loadFile])
 
   const handlePlayPause = () => apiRef.current?.playPause()
   const handleStop      = () => { apiRef.current?.stop(); setPlayState("stopped") }
