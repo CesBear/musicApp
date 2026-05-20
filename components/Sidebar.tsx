@@ -59,6 +59,13 @@ const Icon = {
       <rect x="11" y="3" width="3" height="11" rx="1" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
     </svg>
   ),
+  tab: ({ active }: IconProps) => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
+      <line x1="5" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth={active ? 1.4 : 1.1} strokeLinecap="round" opacity="0.5"/>
+      <text x="4" y="11" fontSize="5.5" fontWeight="700" fill="currentColor" style={{ fontFamily: "monospace", letterSpacing: "0.5px" }}>TAB</text>
+    </svg>
+  ),
   rhythm: ({ active }: IconProps) => (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       {[0,1,2].map(row => [0,1,2].map(col => (
@@ -83,6 +90,7 @@ const NAV = [
   { href: "/circulo-quintas", label: "Círculo de Quintas",   icon: Icon.circle },
   { href: "/chord-builder",   label: "Chord Builder",        icon: Icon.chord  },
   { href: "/ritmos",           label: "Ritmos",               icon: Icon.rhythm },
+  { href: "/lector",           label: "Lector GP",            icon: Icon.tab    },
   { href: "/material",        label: "Material",             icon: Icon.book   },
   { href: "/progreso",        label: "Mi Progreso",          icon: Icon.progress },
 ]
