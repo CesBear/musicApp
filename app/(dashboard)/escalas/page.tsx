@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Fretboard from "@/components/Fretboard"
-import Metronome from "@/components/Metronome"
 import {
   NOTE_NAMES, SCALE_TYPES, SCALE_INFO, DEGREE_COLORS, DEGREE_LABELS,
   INTERVAL_NAMES, getNoteName, getScalePositions,
@@ -33,10 +32,7 @@ export default function EscalasPage() {
   ]
 
   return (
-    <div style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
-
-      {/* ── Main content ── */}
-      <div className="flex flex-col gap-6" style={{ flex: 1, minWidth: 0 }}>
+    <div className="flex flex-col gap-6">
 
         {/* Hero — without aside, just the left block */}
         <div style={{ paddingBottom: 18, borderBottom: "1px solid var(--border-1)" }}>
@@ -63,6 +59,7 @@ export default function EscalasPage() {
         <div className="mc-section">
           <div className="mc-section-head">
             <span className="mc-eyebrow">Tonalidad</span>
+            <span className="mc-section-hint">12 tonos cromáticos</span>
           </div>
           <div className="mc-note-row">
             {NOTE_NAMES.map((n, i) => (
@@ -76,6 +73,7 @@ export default function EscalasPage() {
         <div className="mc-section">
           <div className="mc-section-head">
             <span className="mc-eyebrow">Familia · Escala</span>
+            <span className="mc-section-hint">{SCALE_TYPES.length} escalas disponibles</span>
           </div>
           <div className="mc-scale-groups">
             {groups.map(g => (
@@ -172,12 +170,5 @@ export default function EscalasPage() {
           </div>
         </div>
       </div>
-
-      {/* ── Metronome sticky column ── */}
-      <div style={{ width: 272, flexShrink: 0, position: "sticky", top: 28 }}>
-        <Metronome />
-      </div>
-
-    </div>
   )
 }
