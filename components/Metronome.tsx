@@ -1,54 +1,82 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { playMetronomeClick, getAudioTime } from "@/lib/audio"
+import { playMetronomeClick, getAudioTime, ClickSound } from "@/lib/audio"
 import { DEGREE_COLORS } from "@/data/scales"
 
-type TimeSig   = "2/4" | "3/4" | "4/4" | "6/8"
-type Subdiv    = "none" | "8th"
+type Subdiv = "none" | "8th"
 
-// Number of main beats shown per time signature
-const BEATS_PER_BAR: Record<TimeSig, number> = { "2/4": 2, "3/4": 3, "4/4": 4, "6/8": 6 }
-// Which beat indices are accented
-const ACCENT_MAP: Record<TimeSig, Set<number>> = {
-  "2/4": new Set([0]),
-  "3/4": new Set([0]),
-  "4/4": new Set([0]),
-  "6/8": new Set([0, 3]),   // two groups of 3
+const DENOMINATORS = [1, 2, 4, 8, 16]
+// Beat accent levels: 0 = muted, 1 = normal, 2 = accent
+type AccentLevel = 0 | 1 | 2
+
+const SOUNDS: { id: ClickSound; label: string }[] = [
+  { id: "classic", label: "Clásico" },
+  { id: "wood",    label: "Madera"  },
+  { id: "beep",    label: "Beep"    },
+  { id: "rim",     label: "Rim"     },
+]
+
+const ACCENT_COLOR: Record<AccentLevel, string> = {
+  2: DEGREE_COLORS[0],
+  1: "rgba(255,255,255,0.55)",
+  0: "rgba(255,255,255,0.10)",
+}
+const ACCENT_BORDER: Record<AccentLevel, string> = {
+  2: `${DEGREE_COLORS[0]}80`,
+  1: "rgba(255,255,255,0.15)",
+  0: "rgba(255,255,255,0.06)",
+}
+const ACCENT_LABEL: Record<AccentLevel, string> = {
+  2: "Acento", 1: "Normal", 0: "Mute",
 }
 
 export default function Metronome() {
-  const [on,       setOn]       = useState(false)
-  const [bpm,      setBpm]      = useState(80)
-  const [timeSig,  setTimeSig]  = useState<TimeSig>("4/4")
-  const [subdiv,   setSubdiv]   = useState<Subdiv>("none")
-  const [beatViz,  setBeatViz]  = useState(-1)   // which main beat is lit
+  const [on,          setOn]         = useState(false)
+  const [bpm,         setBpm]        = useState(80)
+  const [numerator,   setNumerator]  = useState(4)
+  const [denIdx,      setDenIdx]     = useState(2)          // index into DENOMINATORS → 4
+  const [subdiv,      setSubdiv]     = useState<Subdiv>("none")
+  const [sound,       setSound]      = useState<ClickSound>("classic")
+  const [accents,     setAccents]    = useState<AccentLevel[]>([2, 1, 1, 1])
+  const [beatViz,     setBeatViz]    = useState(-1)
 
-  // Live refs so the scheduler always sees the latest values without restarting
-  const liveRef = useRef({ bpm, timeSig, subdiv })
-  liveRef.current = { bpm, timeSig, subdiv }
+  const denominator = DENOMINATORS[denIdx]
 
-  const schedRef     = useRef<ReturnType<typeof setInterval> | null>(null)
-  const nextTimeRef  = useRef(0)   // AudioContext time of next click to schedule
-  const tickRef      = useRef(0)   // absolute tick index (resets on start)
+  // Resize accent array when numerator changes
+  useEffect(() => {
+    setAccents(prev => Array.from({ length: numerator }, (_, i) =>
+      i < prev.length ? prev[i] : (i === 0 ? 2 : 1)
+    ) as AccentLevel[])
+  }, [numerator])
+
+  // Live ref for scheduler — avoids restarts on every state change
+  const liveRef = useRef({ bpm, numerator, subdiv, sound, accents })
+  liveRef.current = { bpm, numerator, subdiv, sound, accents }
+
+  const schedRef    = useRef<ReturnType<typeof setInterval> | null>(null)
+  const nextTimeRef = useRef(0)
+  const tickRef     = useRef(0)
 
   const schedule = useCallback(() => {
-    const LOOKAHEAD = 0.10   // seconds — how far ahead to schedule
-    const { bpm, timeSig, subdiv } = liveRef.current
-    const mainBeats   = BEATS_PER_BAR[timeSig]
-    const totalTicks  = mainBeats * (subdiv === "8th" ? 2 : 1)
-    const secPerTick  = 60 / bpm / (subdiv === "8th" ? 2 : 1)
-    const audioNow    = getAudioTime()
+    const LOOKAHEAD = 0.10
+    const { bpm, numerator, subdiv, sound, accents } = liveRef.current
+    const totalTicks = numerator * (subdiv === "8th" ? 2 : 1)
+    const secPerTick = 60 / bpm / (subdiv === "8th" ? 2 : 1)
+    const audioNow   = getAudioTime()
 
     while (nextTimeRef.current < audioNow + LOOKAHEAD) {
       const tick      = tickRef.current % totalTicks
       const mainBeat  = subdiv === "8th" ? Math.floor(tick / 2) : tick
       const isSub     = subdiv === "8th" && tick % 2 === 1
-      const clickType = isSub ? "sub" : ACCENT_MAP[timeSig].has(mainBeat) ? "accent" : "beat"
+      const accent    = accents[mainBeat] ?? 1
 
-      playMetronomeClick(clickType, nextTimeRef.current)
+      if (isSub) {
+        playMetronomeClick("sub", nextTimeRef.current, sound)
+      } else if (accent > 0) {
+        playMetronomeClick(accent === 2 ? "accent" : "beat", nextTimeRef.current, sound)
+      }
 
-      // Sync visual indicator — schedule a timeout that fires when the audio plays
       if (!isSub) {
         const delayMs = Math.max(0, (nextTimeRef.current - audioNow) * 1000)
         const beat = mainBeat
@@ -78,74 +106,175 @@ export default function Metronome() {
   const tapsRef = useRef<number[]>([])
   const handleTap = () => {
     const now = Date.now()
-    tapsRef.current = [...tapsRef.current, now].filter(t => now - t < 3000).slice(-6)
+    tapsRef.current = [...tapsRef.current, now].filter(t => now - t < 3000).slice(-8)
     if (tapsRef.current.length >= 2) {
       const gaps = tapsRef.current.slice(1).map((t, i) => t - tapsRef.current[i])
-      setBpm(Math.round(60000 / (gaps.reduce((a, b) => a + b) / gaps.length)))
+      setBpm(Math.max(30, Math.min(240, Math.round(60000 / (gaps.reduce((a, b) => a + b) / gaps.length)))))
     }
   }
 
-  const mainBeats  = BEATS_PER_BAR[timeSig]
-  const accentSet  = ACCENT_MAP[timeSig]
+  const cycleAccent = (i: number) => {
+    setAccents(prev => {
+      const next = [...prev] as AccentLevel[]
+      next[i] = ((next[i] + 1) % 3) as AccentLevel
+      return next
+    })
+  }
+
+  const changeBpm = (delta: number) => setBpm(b => Math.max(30, Math.min(240, b + delta)))
+
+  // ─── Styles ────────────────────────────────────────────────────────────────
+  const pill = (active: boolean): React.CSSProperties => ({
+    padding: "4px 10px",
+    borderRadius: 6,
+    fontSize: 10.5,
+    fontFamily: "var(--font-mono)",
+    letterSpacing: "0.06em",
+    border: active ? `1px solid ${DEGREE_COLORS[0]}` : "1px solid rgba(255,255,255,0.1)",
+    background: active ? `${DEGREE_COLORS[0]}18` : "rgba(255,255,255,0.04)",
+    color: active ? DEGREE_COLORS[0] : "rgba(255,255,255,0.55)",
+    cursor: "pointer",
+    transition: "all 0.12s",
+  })
+
+  const arrowBtn: React.CSSProperties = {
+    width: 24, height: 24,
+    borderRadius: 5,
+    border: "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,255,255,0.04)",
+    color: "rgba(255,255,255,0.7)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontSize: 13, cursor: "pointer",
+    transition: "background 0.12s",
+  }
 
   return (
-    <div className="mc-metronome">
-      {/* Toggle */}
-      <button className={`mc-metro-toggle ${on ? "on" : ""}`} onClick={() => setOn(v => !v)}>
-        <span className="mc-metro-icon">▣</span>
-        {on ? "Detener" : "Metrónomo"}
-      </button>
+    <div className="mc-metronome" style={{ gap: 14 }}>
 
-      {/* BPM row */}
-      <div className="mc-metro-bpm">
-        <input type="range" min="40" max="220" value={bpm}
-          onChange={e => setBpm(+e.target.value)} className="mc-slider" />
-        <span className="mc-mono-tag" style={{ minWidth: 52, textAlign: "right" }}>{bpm} BPM</span>
-        <button onClick={handleTap} className="mc-btn-ghost"
-          style={{ fontSize: 11, padding: "4px 10px", whiteSpace: "nowrap" }}>
-          Tap
+      {/* ── Row 1: header + play ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "rgba(255,255,255,0.3)" }}>
+          METRÓNOMO
+        </span>
+        <button
+          onClick={() => setOn(v => !v)}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "5px 14px",
+            borderRadius: 999,
+            border: on ? "1px solid rgba(255,80,80,0.4)" : `1px solid ${DEGREE_COLORS[0]}60`,
+            background: on ? "rgba(255,80,80,0.12)" : `${DEGREE_COLORS[0]}12`,
+            color: on ? "#ff6060" : DEGREE_COLORS[0],
+            fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+            transition: "all 0.15s",
+          }}>
+          {on
+            ? <><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="3" height="8" fill="currentColor"/><rect x="6" y="1" width="3" height="8" fill="currentColor"/></svg> Stop</>
+            : <><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 1 L9 5 L2 9Z" fill="currentColor"/></svg> Play</>
+          }
         </button>
       </div>
 
-      {/* Options row: time signature + subdivision */}
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 4 }}>
-          {(["2/4","3/4","4/4","6/8"] as TimeSig[]).map(ts => (
-            <button key={ts} onClick={() => setTimeSig(ts)}
-              className={`mc-pos-chip ${timeSig === ts ? "active" : ""}`}
-              style={{ fontSize: 11, padding: "3px 9px" }}>
-              {ts}
-            </button>
-          ))}
+      {/* ── Row 2: BPM display ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button onClick={() => changeBpm(-1)} style={{ ...arrowBtn, fontSize: 16 }}>−</button>
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <div style={{
+            fontFamily: "var(--font-mono)", fontWeight: 700,
+            fontSize: 46, lineHeight: 1, color: "#fff",
+            letterSpacing: "-0.03em",
+          }}>{bpm}</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", fontFamily: "var(--font-mono)" }}>BPM</div>
         </div>
+        <button onClick={() => changeBpm(1)} style={{ ...arrowBtn, fontSize: 16 }}>+</button>
+      </div>
 
-        <span className="mc-meta-sep">·</span>
+      {/* Slider + Tap */}
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input type="range" min={30} max={240} value={bpm}
+          onChange={e => setBpm(+e.target.value)} className="mc-slider" style={{ flex: 1 }} />
+        <button onClick={handleTap} style={{ ...pill(false), padding: "5px 10px" }}>TAP</button>
+      </div>
 
-        <div style={{ display: "flex", gap: 4 }}>
-          {([
-            { id: "none" as Subdiv, label: "♩"   },
-            { id: "8th"  as Subdiv, label: "♩♪"  },
-          ]).map(sv => (
-            <button key={sv.id} onClick={() => setSubdiv(sv.id)}
-              className={`mc-pos-chip ${subdiv === sv.id ? "active" : ""}`}
-              style={{ fontSize: 13, padding: "3px 9px" }}>
-              {sv.label}
-            </button>
-          ))}
+      {/* ── Row 3: Compás ── */}
+      <div>
+        <div style={{ fontSize: 9, letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", fontFamily: "var(--font-mono)", marginBottom: 6 }}>COMPÁS</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {/* Numerator */}
+          <button onClick={() => setNumerator(n => Math.max(1, n - 1))} style={arrowBtn}>‹</button>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 20, fontWeight: 700, color: "#fff", minWidth: 24, textAlign: "center", lineHeight: 1 }}>{numerator}</span>
+          <button onClick={() => setNumerator(n => Math.min(16, n + 1))} style={arrowBtn}>›</button>
+          <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 18, margin: "0 2px", lineHeight: 1 }}>/</span>
+          {/* Denominator */}
+          <button onClick={() => setDenIdx(i => Math.max(0, i - 1))} style={arrowBtn}>‹</button>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 20, fontWeight: 700, color: "#fff", minWidth: 24, textAlign: "center", lineHeight: 1 }}>{denominator}</span>
+          <button onClick={() => setDenIdx(i => Math.min(DENOMINATORS.length - 1, i + 1))} style={arrowBtn}>›</button>
         </div>
       </div>
 
-      {/* Beat visualizer */}
-      {on && (
-        <div className="mc-beat-dots">
-          {Array.from({ length: mainBeats }, (_, i) => (
-            <span key={i}
-              className={`mc-beat ${beatViz === i ? "active" : ""} ${accentSet.has(i) ? "accent" : ""}`}
-              style={timeSig === "6/8" && i === 3 ? { marginLeft: 6 } : undefined}
-            />
-          ))}
+      {/* ── Row 4: Sound style + Subdivision ── */}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-start" }}>
+        <div>
+          <div style={{ fontSize: 9, letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", fontFamily: "var(--font-mono)", marginBottom: 5 }}>SONIDO</div>
+          <div style={{ display: "flex", gap: 3 }}>
+            {SOUNDS.map(s => (
+              <button key={s.id} onClick={() => setSound(s.id)} style={pill(sound === s.id)}>{s.label}</button>
+            ))}
+          </div>
         </div>
-      )}
+        <div>
+          <div style={{ fontSize: 9, letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", fontFamily: "var(--font-mono)", marginBottom: 5 }}>SUB</div>
+          <div style={{ display: "flex", gap: 3 }}>
+            <button onClick={() => setSubdiv("none")} style={pill(subdiv === "none")}>♩</button>
+            <button onClick={() => setSubdiv("8th")}  style={pill(subdiv === "8th")}>♩♪</button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Row 5: Beat grid (accent editor + visualizer) ── */}
+      <div>
+        <div style={{ fontSize: 9, letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", fontFamily: "var(--font-mono)", marginBottom: 6 }}>
+          TIEMPOS · click para cambiar acento
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {accents.map((accent, i) => {
+            const isActive = on && beatViz === i
+            return (
+              <button
+                key={i}
+                onClick={() => cycleAccent(i)}
+                title={ACCENT_LABEL[accent]}
+                style={{
+                  width: 28, height: 28,
+                  borderRadius: 6,
+                  border: isActive
+                    ? `1.5px solid ${DEGREE_COLORS[0]}`
+                    : `1px solid ${ACCENT_BORDER[accent]}`,
+                  background: isActive
+                    ? DEGREE_COLORS[0]
+                    : accent === 2 ? `${DEGREE_COLORS[0]}20`
+                    : accent === 1 ? "rgba(255,255,255,0.06)"
+                    : "rgba(255,255,255,0.02)",
+                  color: isActive ? "#0a0a08"
+                    : ACCENT_COLOR[accent],
+                  fontSize: 9.5,
+                  fontFamily: "var(--font-mono)",
+                  fontWeight: isActive || accent === 2 ? 700 : 400,
+                  cursor: "pointer",
+                  transition: "background 0.06s, border 0.06s, color 0.06s",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                {i + 1}
+              </button>
+            )
+          })}
+        </div>
+        <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.2)", fontFamily: "var(--font-mono)", marginTop: 5, letterSpacing: "0.06em" }}>
+          ■ acento &nbsp;·&nbsp; □ normal &nbsp;·&nbsp; · mute
+        </div>
+      </div>
+
     </div>
   )
 }

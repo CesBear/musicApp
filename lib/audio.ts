@@ -216,21 +216,77 @@ export function getAudioTime(): number {
   return ctx.currentTime
 }
 
-// type: "accent" = beat 1 | "beat" = other main beats | "sub" = subdivision
-export function playMetronomeClick(type: "accent" | "beat" | "sub" = "beat", when?: number): void {
+export type ClickSound = "classic" | "wood" | "beep" | "rim"
+
+function noiseBuffer(ctx: AudioContext, dur: number, decay = 4): AudioBuffer {
+  const n = Math.ceil(ctx.sampleRate * dur)
+  const buf = ctx.createBuffer(1, n, ctx.sampleRate)
+  const d = buf.getChannelData(0)
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / n * decay)
+  return buf
+}
+
+export function playMetronomeClick(
+  type: "accent" | "beat" | "sub" = "beat",
+  when?: number,
+  sound: ClickSound = "classic"
+): void {
   const { ctx, bus } = getMaster()
   const t0 = when ?? ctx.currentTime
-  const freq   = type === "accent" ? 1600 : type === "beat" ? 1000 : 700
-  const peak   = type === "accent" ? 0.14 : type === "beat" ? 0.09 : 0.04
-  const dur    = type === "sub" ? 0.04 : 0.06
-  const osc = ctx.createOscillator()
-  osc.type = "square"
-  osc.frequency.value = freq
-  const g = ctx.createGain()
-  g.gain.setValueAtTime(0, t0)
-  g.gain.linearRampToValueAtTime(peak, t0 + 0.002)
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
-  osc.connect(g)
-  g.connect(bus)
-  osc.start(t0); osc.stop(t0 + dur + 0.01)
+  const isAccent = type === "accent"
+  const isSub    = type === "sub"
+
+  if (sound === "classic") {
+    const freq = isAccent ? 1600 : isSub ? 700 : 1000
+    const peak = isAccent ? 0.14  : isSub ? 0.04 : 0.09
+    const dur  = isSub ? 0.04 : 0.06
+    const osc = ctx.createOscillator()
+    osc.type = "square"; osc.frequency.value = freq
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(peak, t0 + 0.002)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
+    osc.connect(g); g.connect(bus)
+    osc.start(t0); osc.stop(t0 + dur + 0.01)
+
+  } else if (sound === "wood") {
+    const freq = isAccent ? 1100 : isSub ? 600 : 800
+    const peak = isAccent ? 0.45  : isSub ? 0.20 : 0.32
+    const dur  = isAccent ? 0.055 : isSub ? 0.025 : 0.04
+    const src = ctx.createBufferSource()
+    src.buffer = noiseBuffer(ctx, dur, 10)
+    const bp = ctx.createBiquadFilter()
+    bp.type = "bandpass"; bp.frequency.value = freq; bp.Q.value = 10
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(peak, t0)
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + dur)
+    src.connect(bp); bp.connect(g); g.connect(bus)
+    src.start(t0); src.stop(t0 + dur + 0.005)
+
+  } else if (sound === "beep") {
+    const freq = isAccent ? 1047 : isSub ? 440 : 660   // C6, A4, E5
+    const peak = isAccent ? 0.20  : isSub ? 0.05 : 0.12
+    const dur  = isSub ? 0.03 : 0.05
+    const osc = ctx.createOscillator()
+    osc.type = "sine"; osc.frequency.value = freq
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(peak, t0 + 0.002)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
+    osc.connect(g); g.connect(bus)
+    osc.start(t0); osc.stop(t0 + dur + 0.005)
+
+  } else if (sound === "rim") {
+    const peak = isAccent ? 0.55  : isSub ? 0.18 : 0.38
+    const dur  = isAccent ? 0.028 : isSub ? 0.012 : 0.018
+    const src = ctx.createBufferSource()
+    src.buffer = noiseBuffer(ctx, dur, 15)
+    const hp = ctx.createBiquadFilter()
+    hp.type = "highpass"; hp.frequency.value = isAccent ? 4500 : 3200
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(peak, t0)
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + dur)
+    src.connect(hp); hp.connect(g); g.connect(bus)
+    src.start(t0); src.stop(t0 + dur + 0.005)
+  }
 }
