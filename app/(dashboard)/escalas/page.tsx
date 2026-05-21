@@ -4,50 +4,36 @@ import { useState } from "react"
 import Fretboard from "@/components/Fretboard"
 import {
   NOTE_NAMES, SCALE_TYPES, SCALE_INFO, DEGREE_COLORS, DEGREE_LABELS,
-  MAJOR_TRIADS, MINOR_TRIADS, INTERVAL_NAMES,
-  getNoteName, getScalePositions,
+  INTERVAL_NAMES, getNoteName, getScalePositions,
 } from "@/data/scales"
 import { playScale, playGuitarString } from "@/lib/audio"
 import Metronome from "@/components/Metronome"
 
 export default function EscalasPage() {
-  const [rootIdx, setRootIdx] = useState(9)               // A
-  const [scaleTypeIdx, setScaleTypeIdx] = useState(4)     // Pentatónica Menor
+  const [rootIdx,     setRootIdx]     = useState(9)               // A
+  const [scaleTypeIdx,setScaleTypeIdx]= useState(4)               // Pentatónica Menor
   const [positionIdx, setPositionIdx] = useState<number | null>(null)
   const [displayMode, setDisplayMode] = useState<"notes" | "intervals">("notes")
-  const [focusMode, setFocusMode] = useState(false)
-  const [activeStrings, setActiveStrings] = useState<Set<number> | null>(null)
+  const [focusMode,   setFocusMode]   = useState(false)
 
-  // String sets for triad visualization (indices: 0=low E … 5=high e)
-  const STRING_SETS = [
-    { label: "e · B · G",  strings: new Set([5, 4, 3]), name: "Cuerdas 1–3" },
-    { label: "B · G · D",  strings: new Set([4, 3, 2]), name: "Cuerdas 2–4" },
-    { label: "G · D · A",  strings: new Set([3, 2, 1]), name: "Cuerdas 3–5" },
-    { label: "D · A · E",  strings: new Set([2, 1, 0]), name: "Cuerdas 4–6" },
-  ]
-
-
-  const scaleType = SCALE_TYPES[scaleTypeIdx]
-  const info = SCALE_INFO[scaleType.name]
-  const isMajor = scaleType.name === "Mayor"
-  const isMinor = scaleType.name === "Menor Natural"
-  const showTriads = isMajor || isMinor
-  const triads = isMajor ? MAJOR_TRIADS : MINOR_TRIADS
-  const diatonicNotes = scaleType.intervals.map(i => (rootIdx + i) % 12)
-  const positions = getScalePositions(rootIdx, scaleType.intervals)
+  const scaleType      = SCALE_TYPES[scaleTypeIdx]
+  const info           = SCALE_INFO[scaleType.name]
+  const diatonicNotes  = scaleType.intervals.map(i => (rootIdx + i) % 12)
+  const positions      = getScalePositions(rootIdx, scaleType.intervals)
   const activePosition = positionIdx !== null ? positions[positionIdx] : null
 
-  const handleRoot = (i: number) => { setRootIdx(i); setPositionIdx(null) }
+  const handleRoot  = (i: number) => { setRootIdx(i); setPositionIdx(null) }
   const handleScale = (i: number) => { setScaleTypeIdx(i); setPositionIdx(null) }
-  const handlePlay = () => playScale(rootIdx, scaleType.intervals, 3)
+  const handlePlay  = () => playScale(rootIdx, scaleType.intervals, 3)
+
   const groups = [
-    { label: "Diatónicas",     items: SCALE_TYPES.map((s, i) => ({ ...s, idx: i })).filter(s => s.group === "major" || s.group === "minor") },
-    { label: "Pentatónicas",   items: SCALE_TYPES.map((s, i) => ({ ...s, idx: i })).filter(s => s.group === "pentatonic") },
-    { label: "Modos griegos",  items: SCALE_TYPES.map((s, i) => ({ ...s, idx: i })).filter(s => s.group === "mode") },
+    { label: "Diatónicas",    items: SCALE_TYPES.map((s, i) => ({ ...s, idx: i })).filter(s => s.group === "major" || s.group === "minor") },
+    { label: "Pentatónicas",  items: SCALE_TYPES.map((s, i) => ({ ...s, idx: i })).filter(s => s.group === "pentatonic") },
+    { label: "Modos griegos", items: SCALE_TYPES.map((s, i) => ({ ...s, idx: i })).filter(s => s.group === "mode") },
   ]
 
   return (
-    <div className="flex flex-col gap-9">
+    <div className="flex flex-col gap-6">
       <div className="mc-hero">
         <div>
           <div className="mc-eyebrow">Estudio · Escalas</div>
@@ -70,7 +56,6 @@ export default function EscalasPage() {
             </svg>
             Escuchar escala
           </button>
-
           <Metronome />
         </div>
       </div>
@@ -164,42 +149,12 @@ export default function EscalasPage() {
           ))}
         </div>
 
-        {/* Triad string-set selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-          <span className="mc-mono-mini" style={{ marginRight: 4 }}>TRÍADAS</span>
-          <button
-            onClick={() => setActiveStrings(null)}
-            className={`mc-pos-chip ${activeStrings === null ? "active" : ""}`}
-          >
-            Todas las cuerdas
-          </button>
-          {STRING_SETS.map((ss) => {
-            const isActive = activeStrings !== null && [...ss.strings].every(s => activeStrings.has(s))
-            return (
-              <button
-                key={ss.label}
-                onClick={() => setActiveStrings(isActive ? null : ss.strings)}
-                className={`mc-pos-chip ${isActive ? "active" : ""}`}
-              >
-                {ss.label}
-                <span className="mc-pos-range">{ss.name}</span>
-              </button>
-            )
-          })}
-          {activeStrings !== null && (
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-mono)" }}>
-              · Hover un acorde abajo para ver su tríada
-            </span>
-          )}
-        </div>
-
         <Fretboard
           rootIdx={rootIdx}
           intervals={scaleType.intervals}
           position={activePosition}
           displayMode={displayMode}
           focusMode={focusMode}
-          activeStrings={activeStrings}
           onNoteClick={(n) => playGuitarString(n.midi + 12, 0, 0.13)}
         />
 
@@ -214,31 +169,6 @@ export default function EscalasPage() {
           ))}
         </div>
       </div>
-
-      {showTriads && (
-        <div className="mc-section">
-          <div className="mc-section-head">
-            <span className="mc-eyebrow">Acordes diatónicos</span>
-            <span className="mc-section-hint">Tríadas construidas sobre cada grado</span>
-          </div>
-          <div className="mc-diatonic-grid">
-            {DEGREE_LABELS.map((deg, i) => {
-              if (i >= triads.length) return null
-              const chord = triads[i]
-              const noteName = getNoteName(diatonicNotes[i])
-              return (
-                <div key={deg} className="mc-diatonic-card">
-                  <span className="mc-diatonic-deg" style={{ color: DEGREE_COLORS[i] }}>{deg}{chord.quality === "dim" ? "°" : ""}</span>
-                  <span className="mc-diatonic-chord">
-                    {noteName}<span className="mc-diatonic-suffix">{chord.symbol}</span>
-                  </span>
-                  <span className="mc-diatonic-quality">{chord.quality}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

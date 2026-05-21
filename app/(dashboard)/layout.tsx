@@ -22,7 +22,7 @@ export default async function DashboardLayout({
           var(--bg-1)
         `,
       }}>
-        <div className="mx-auto w-full" style={{ maxWidth: 1280, padding: "56px 64px 80px" }}>
+        <div className="mx-auto w-full" style={{ maxWidth: 1320, padding: "28px 48px 48px" }}>
           {children}
         </div>
       </main>

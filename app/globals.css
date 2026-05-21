@@ -128,16 +128,16 @@ body::before {
 }
 .mc-h1 {
   font-family: var(--font-display);
-  font-size: clamp(54px, 6vw, 84px);
+  font-size: clamp(36px, 4vw, 58px);
   font-weight: 400;
   letter-spacing: -0.025em;
-  margin: 6px 0 12px;
+  margin: 4px 0 8px;
   line-height: 1;
 }
 .mc-lede {
   color: var(--text-2);
-  font-size: 15.5px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.5;
   max-width: 56ch;
   margin: 0;
   letter-spacing: -0.005em;
@@ -145,7 +145,7 @@ body::before {
 }
 .mc-meta-row {
   display: flex; align-items: baseline; gap: 10px;
-  margin-top: 16px;
+  margin-top: 10px;
   flex-wrap: wrap;
 }
 .mc-meta-sep { color: var(--text-4); }
@@ -180,8 +180,8 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 40px;
-  padding-bottom: 28px;
+  gap: 32px;
+  padding-bottom: 18px;
   border-bottom: 1px solid var(--border-1);
   flex-wrap: wrap;
 }
