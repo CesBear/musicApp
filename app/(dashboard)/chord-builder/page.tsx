@@ -127,7 +127,7 @@ export default function ChordBuilderPage() {
                     color: active ? DEGREE_COLORS[0] : "rgba(255,255,255,0.85)",
                     letterSpacing: "0.06em",
                   }}>
-                    {v.shape ?? "—"}
+                    {v.shape ? `FORMA ${v.shape}` : "—"}
                   </span>
                   <span style={{
                     fontSize: 10, color: active ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.35)",

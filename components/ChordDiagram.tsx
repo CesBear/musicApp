@@ -7,12 +7,12 @@ interface Props {
   voicing: ChordVoicing
   name: string
   symbol?: string
-  size?: "sm" | "md" | "lg"
+  size?: "xs" | "sm" | "md" | "lg"
   onPlay?: () => void
 }
 
 export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", onPlay }: Props) {
-  const scale = size === "sm" ? 0.7 : size === "md" ? 0.88 : 1.05
+  const scale = size === "xs" ? 0.54 : size === "sm" ? 0.7 : size === "md" ? 0.88 : 1.05
   const SW = 150 * scale
   const SH = 195 * scale
   const SS = 22 * scale

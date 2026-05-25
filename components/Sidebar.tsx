@@ -59,6 +59,15 @@ const Icon = {
       <rect x="11" y="3" width="3" height="11" rx="1" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
     </svg>
   ),
+  prog: ({ active }: IconProps) => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="1"   y="5" width="3.5" height="6" rx="1" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
+      <rect x="6.2" y="5" width="3.5" height="6" rx="1" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
+      <rect x="11.5" y="5" width="3.5" height="6" rx="1" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
+      <line x1="4.5" y1="8" x2="6.2" y2="8" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.55"/>
+      <line x1="9.7" y1="8" x2="11.5" y2="8" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.55"/>
+    </svg>
+  ),
   tab: ({ active }: IconProps) => (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth={active ? 1.6 : 1.3}/>
@@ -89,6 +98,8 @@ const NAV = [
   { href: "/triadas",         label: "Tríadas",              icon: Icon.triads },
   { href: "/circulo-quintas", label: "Círculo de Quintas",   icon: Icon.circle },
   { href: "/chord-builder",   label: "Chord Builder",        icon: Icon.chord  },
+  { href: "/progresiones",    label: "Progresiones",         icon: Icon.prog   },
+  { href: "/rasgueos",        label: "Rasgueos",             icon: Icon.rhythm },
   { href: "/lector",           label: "Lector GP",            icon: Icon.tab    },
   { href: "/material",        label: "Material",             icon: Icon.book   },
   { href: "/progreso",        label: "Mi Progreso",          icon: Icon.progress },

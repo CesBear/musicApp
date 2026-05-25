@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import dynamic from "next/dynamic"
 import type { CircleSelection } from "@/components/CircleOfFifths"
 const CircleOfFifths = dynamic(() => import("@/components/CircleOfFifths"), { ssr: false })
@@ -109,6 +110,21 @@ export default function CirculoQuintasPage() {
                   <li>Vecinos cercanos = modulación natural</li>
                 </ul>
               </div>
+
+              <Link
+                href={`/progresiones?root=${selected.rootIdx}&mode=${selected.kind}`}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  padding: "10px 16px", borderRadius: 8, textDecoration: "none",
+                  border: `1px solid oklch(0.74 0.10 ${selected.hue} / 0.3)`,
+                  background: `oklch(0.74 0.10 ${selected.hue} / 0.07)`,
+                  color: `oklch(0.78 0.10 ${selected.hue})`,
+                  fontSize: 11, fontFamily: "var(--font-mono)",
+                  letterSpacing: "0.1em", fontWeight: 600,
+                  transition: "all 0.15s",
+                }}>
+                EXPLORAR EN PROGRESIONES →
+              </Link>
             </>
           ) : (
             <div className="mc-info-card mc-info-card-quiet">

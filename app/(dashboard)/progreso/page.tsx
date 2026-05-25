@@ -90,7 +90,9 @@ export default function ProgresoPage() {
     const start = new Date(now); start.setDate(now.getDate() - 6)
     return d >= start
   })
-  const weekMins = weekSessions.reduce((a, s) => a + s.duration_min, 0)
+  const weekMins  = weekSessions.reduce((a, s) => a + s.duration_min, 0)
+  const totalDays = new Set(sessions.map(s => s.date)).size
+  const avgMins   = sessions.length > 0 ? Math.round(totalMins / sessions.length) : 0
 
   return (
     <div className="flex flex-col gap-8">
@@ -111,54 +113,58 @@ export default function ProgresoPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-        {[
-          { label: "Racha actual", value: `${streak}d`, sub: streak === 1 ? "1 día consecutivo" : `${streak} días consecutivos` },
-          { label: "Esta semana",  value: weekMins >= 60 ? `${Math.floor(weekMins/60)}h ${weekMins%60}m` : `${weekMins}m`, sub: `${weekSessions.length} sesiones` },
-          { label: "Total",        value: totalH > 0 ? `${totalH}h ${totalM}m` : `${totalM}m`, sub: `${sessions.length} sesiones` },
-        ].map(s => (
-          <div key={s.label} className="mc-info-card">
-            <p className="mc-info-label">{s.label}</p>
-            <p style={{ fontSize: 32, fontWeight: 700, color: DEGREE_COLORS[0], fontFamily: "var(--font-mono)", lineHeight: 1.1, marginTop: 6 }}>{s.value}</p>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4, fontFamily: "var(--font-mono)" }}>{s.sub}</p>
-          </div>
-        ))}
-      </div>
+      <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
 
-      {/* Calendar heatmap */}
-      <div className="mc-info-card">
-        <p className="mc-info-label" style={{ marginBottom: 12 }}>Últimas 12 semanas</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 3 }}>
-          {/* Group by week */}
-          {Array.from({ length: 12 }).map((_, w) => (
-            <div key={w} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              {calendar.slice(w * 7, w * 7 + 7).map(d => {
-                const intensity = d.mins === 0 ? 0 : d.mins < 20 ? 0.25 : d.mins < 45 ? 0.55 : 0.9
-                return (
-                  <div key={d.key}
-                    title={`${d.key}: ${d.mins}min`}
-                    style={{
-                      width: "100%", aspectRatio: "1",
-                      borderRadius: 3,
-                      background: intensity === 0
-                        ? "rgba(255,255,255,0.04)"
-                        : `oklch(0.80 0.15 70 / ${intensity})`,
-                      outline: d.isToday ? "1.5px solid rgba(255,255,255,0.3)" : "none",
-                    }}
-                  />
-                )
-              })}
+        {/* Stats 2×2 */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, flex: 1 }}>
+          {[
+            { label: "Racha actual",   value: `${streak}d`,  sub: streak === 1 ? "1 día consecutivo" : `${streak} días consecutivos` },
+            { label: "Esta semana",    value: weekMins >= 60 ? `${Math.floor(weekMins/60)}h ${weekMins%60}m` : `${weekMins}m`, sub: `${weekSessions.length} sesiones` },
+            { label: "Total",          value: totalH > 0 ? `${totalH}h ${totalM}m` : `${totalM}m`, sub: `${sessions.length} sesiones` },
+            { label: "Promedio/sesión",value: avgMins >= 60 ? `${Math.floor(avgMins/60)}h ${avgMins%60}m` : `${avgMins}m`, sub: `${totalDays} días practicados` },
+          ].map(s => (
+            <div key={s.label} className="mc-info-card">
+              <p className="mc-info-label">{s.label}</p>
+              <p style={{ fontSize: 32, fontWeight: 700, color: DEGREE_COLORS[0], fontFamily: "var(--font-mono)", lineHeight: 1.1, marginTop: 6 }}>{s.value}</p>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4, fontFamily: "var(--font-mono)" }}>{s.sub}</p>
             </div>
           ))}
         </div>
-        <div style={{ display: "flex", gap: 12, marginTop: 10, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-mono)" }}>Menos</span>
-          {[0.04, 0.25, 0.55, 0.9].map((op, i) => (
-            <div key={i} style={{ width: 12, height: 12, borderRadius: 2,
-              background: i === 0 ? "rgba(255,255,255,0.04)" : `oklch(0.80 0.15 70 / ${op})` }} />
-          ))}
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-mono)" }}>Más</span>
+
+        {/* Calendar heatmap */}
+        <div className="mc-info-card" style={{ flexShrink: 0 }}>
+          <p className="mc-info-label" style={{ marginBottom: 12 }}>Últimas 12 semanas</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 13px)", gap: 3, width: "fit-content" }}>
+            {Array.from({ length: 12 }).map((_, w) => (
+              <div key={w} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {calendar.slice(w * 7, w * 7 + 7).map(d => {
+                  const intensity = d.mins === 0 ? 0 : d.mins < 20 ? 0.25 : d.mins < 45 ? 0.55 : 0.9
+                  return (
+                    <div key={d.key}
+                      title={`${d.key}: ${d.mins}min`}
+                      style={{
+                        width: 13, height: 13, borderRadius: 2,
+                        background: intensity === 0
+                          ? "rgba(255,255,255,0.04)"
+                          : `oklch(0.80 0.15 70 / ${intensity})`,
+                        outline: d.isToday ? "1.5px solid rgba(255,255,255,0.3)" : "none",
+                      }}
+                    />
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-mono)" }}>Menos</span>
+            {[0.04, 0.25, 0.55, 0.9].map((op, i) => (
+              <div key={i} style={{ width: 10, height: 10, borderRadius: 2,
+                background: i === 0 ? "rgba(255,255,255,0.04)" : `oklch(0.80 0.15 70 / ${op})` }} />
+            ))}
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-mono)" }}>Más</span>
+          </div>
         </div>
+
       </div>
 
       {/* Register form */}
