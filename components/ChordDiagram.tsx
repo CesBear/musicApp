@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { ChordVoicing } from "@/data/chords"
 import { DEGREE_COLORS } from "@/data/scales"
 
@@ -9,9 +10,11 @@ interface Props {
   symbol?: string
   size?: "xs" | "sm" | "md" | "lg"
   onPlay?: () => void
+  onStringPlay?: (stringIdx: number, fret: number) => void
 }
 
-export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", onPlay }: Props) {
+export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", onPlay, onStringPlay }: Props) {
+  const [hoveredStr, setHoveredStr] = useState<number | null>(null)
   const scale = size === "xs" ? 0.54 : size === "sm" ? 0.7 : size === "md" ? 0.88 : 1.05
   const SW = 150 * scale
   const SH = 195 * scale
@@ -130,6 +133,26 @@ export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", 
                 </text>
               )}
             </g>
+          )
+        })}
+
+        {/* Clickable string hit areas */}
+        {onStringPlay && voicing.frets.map((fret, i) => {
+          if (fret < 0) return null
+          return (
+            <rect
+              key={`hit-${i}`}
+              x={stringX(i) - SS / 2}
+              y={0}
+              width={SS}
+              height={SH}
+              rx={3 * scale}
+              fill={hoveredStr === i ? "rgba(255,255,255,0.07)" : "transparent"}
+              style={{ cursor: "pointer" }}
+              onMouseEnter={() => setHoveredStr(i)}
+              onMouseLeave={() => setHoveredStr(null)}
+              onClick={() => onStringPlay(i, fret)}
+            />
           )
         })}
       </svg>

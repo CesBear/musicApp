@@ -5,6 +5,7 @@ export type ChordVoicing = {
   fingers: number[]   // 0=none, 1=index, 2=mid, 3=ring, 4=pinky
   barre?:  Barre
   shape?:  string     // CAGED shape: "E" | "A" | "C" | "D" | "G"
+  label?:  string     // custom label for triadic voicings
 }
 
 const s = (v: Omit<ChordVoicing,"shape">, shape: string): ChordVoicing => ({ ...v, shape })
@@ -200,3 +201,41 @@ export const CHORD_TYPES: { label: string; type: ChordType; symbol: string; desc
 ]
 
 export const ROOT_NOTES = ["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"]
+
+const ROOT_IDX: Record<string, number> = {
+  "C":0,"C#":1,"D":2,"Eb":3,"E":4,"F":5,"F#":6,"G":7,"Ab":8,"A":9,"Bb":10,"B":11
+}
+
+export function rootToIdx(root: string): number {
+  return ROOT_IDX[root] ?? 0
+}
+
+export function computeTriads(rootIdx: number, quality: "major" | "minor"): ChordVoicing[] {
+  const TUNING = [40, 45, 50, 55, 59, 64]
+  const third  = quality === "major" ? 4 : 3
+  const T      = [rootIdx % 12, (rootIdx + third) % 12, (rootIdx + 7) % 12]
+  const groups: [number, number, number][] = [[3,4,5],[2,3,4],[1,2,3]]
+  const INV_LABELS = ["R","1ª inv","2ª inv"]
+  const GROUP_LABELS = ["4-5-6","3-4-5","2-3-4"]
+  const result: ChordVoicing[] = []
+  for (let gi = 0; gi < groups.length; gi++) {
+    const group = groups[gi]
+    for (let inv = 0; inv < 3; inv++) {
+      const frets   = new Array(6).fill(-1)
+      const fingers = new Array(6).fill(0)
+      let prevPitch = TUNING[group[0]] - 1
+      let valid = true
+      for (let j = 0; j < 3; j++) {
+        const s    = group[j]
+        const open = TUNING[s]
+        let fret   = (T[(inv + j) % 3] - open % 12 + 12) % 12
+        let pitch  = open + fret
+        while (pitch <= prevPitch) { fret += 12; pitch += 12 }
+        if (fret > 12) { valid = false; break }
+        frets[s] = fret; fingers[s] = j + 1; prevPitch = pitch
+      }
+      if (valid) result.push({ frets, fingers, label: `${GROUP_LABELS[gi]} · ${INV_LABELS[inv]}` })
+    }
+  }
+  return result
+}
