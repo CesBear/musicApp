@@ -1,15 +1,17 @@
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth
-  const isLoginPage = req.nextUrl.pathname === "/login"
+const PUBLIC_PATHS = ["/login", "/register"]
 
-  if (!isLoggedIn && !isLoginPage) {
+export default auth((req) => {
+  const isLoggedIn  = !!req.auth
+  const isPublicPage = PUBLIC_PATHS.includes(req.nextUrl.pathname)
+
+  if (!isLoggedIn && !isPublicPage) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
-  if (isLoggedIn && isLoginPage) {
+  if (isLoggedIn && isPublicPage) {
     return NextResponse.redirect(new URL("/escalas", req.url))
   }
 })

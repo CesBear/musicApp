@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { BgStrings, BgPentagrama, BgEspectro, BgMastil } from "@/components/LoginBackgrounds"
 import { DEGREE_COLORS } from "@/data/scales"
@@ -41,6 +42,7 @@ const ArrowIcon = ({ size = 13 }: { size?: number }) => (
 )
 
 export default function LoginPage() {
+  const router = useRouter()
   const [variant, setVariant] = useState<VariantId>("cuerdas")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -66,6 +68,10 @@ export default function LoginPage() {
       <div className="mc-login-tag-top">
         <span className="mc-login-tag-dot" />
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgba(255,255,255,0.55)", letterSpacing: "0.08em" }}>EN VIVO · TUNING A=440</span>
+      </div>
+
+      <div className="mc-login-credit">
+        Made with ❤️ by <a href="https://cesbear.com" target="_blank" rel="noopener noreferrer">CesBear</a>
       </div>
 
       <div className="mc-login-content-v2">
@@ -111,6 +117,10 @@ export default function LoginPage() {
             <span style={{ marginLeft: 4 }}><ArrowIcon /></span>
           </button>
         </form>
+
+        <button type="button" className="mc-login-variant" onClick={() => router.push("/register")}>
+          ¿Tenés un código de invitación? Registrate
+        </button>
 
         <div className="mc-login-variant-picker">
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-3)", letterSpacing: "0.12em", marginRight: 4 }}>FONDO</span>

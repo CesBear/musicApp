@@ -11,7 +11,8 @@ export async function DELETE(
   if (!session) return NextResponse.json({}, { status: 401 })
 
   const { id } = await params
-  const all = await redis.get<PracticeSession[]>("sessions") ?? []
-  await redis.set("sessions", all.filter(s => s.id !== id))
+  const key = `sessions:${session.user.id}`
+  const all = await redis.get<PracticeSession[]>(key) ?? []
+  await redis.set(key, all.filter(s => s.id !== id))
   return NextResponse.json({ ok: true })
 }

@@ -7,7 +7,7 @@ export async function GET() {
   const session = await auth()
   if (!session) return NextResponse.json([], { status: 401 })
 
-  const data = await redis.get<PracticeSession[]>("sessions") ?? []
+  const data = await redis.get<PracticeSession[]>(`sessions:${session.user.id}`) ?? []
   return NextResponse.json(data)
 }
 
@@ -16,7 +16,8 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({}, { status: 401 })
 
   const body = await req.json()
-  const all  = await redis.get<PracticeSession[]>("sessions") ?? []
+  const key  = `sessions:${session.user.id}`
+  const all  = await redis.get<PracticeSession[]>(key) ?? []
 
   const entry: PracticeSession = {
     ...body,
@@ -24,6 +25,6 @@ export async function POST(req: Request) {
     created_at: new Date().toISOString(),
   }
 
-  await redis.set("sessions", [entry, ...all])
+  await redis.set(key, [entry, ...all])
   return NextResponse.json(entry)
 }

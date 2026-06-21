@@ -7,7 +7,7 @@ export async function GET() {
   const session = await auth()
   if (!session) return NextResponse.json([], { status: 401 })
 
-  const data = await redis.get<Lesson[]>("lessons") ?? []
+  const data = await redis.get<Lesson[]>(`lessons:${session.user.id}`) ?? []
   return NextResponse.json(data)
 }
 
@@ -16,7 +16,8 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({}, { status: 401 })
 
   const body = await req.json()
-  const all  = await redis.get<Lesson[]>("lessons") ?? []
+  const key  = `lessons:${session.user.id}`
+  const all  = await redis.get<Lesson[]>(key) ?? []
   const now  = new Date().toISOString()
 
   const entry: Lesson = {
@@ -26,6 +27,6 @@ export async function POST(req: Request) {
     updated_at: now,
   }
 
-  await redis.set("lessons", [entry, ...all])
+  await redis.set(key, [entry, ...all])
   return NextResponse.json(entry)
 }

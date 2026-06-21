@@ -1289,6 +1289,14 @@ body::before {
     0 10px 32px oklch(0.80 0.15 70 / 0.25);
 }
 .mc-login-submit-v2:active { transform: scale(0.985); }
+.mc-login-submit-v2:disabled { opacity: 0.6; cursor: default; }
+
+.mc-login-error {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: oklch(0.72 0.19 25);
+  text-align: center;
+}
 
 .mc-login-variant-picker {
   display: flex; align-items: center; gap: 4px;
@@ -1316,3 +1324,21 @@ body::before {
   background: rgba(255,255,255,0.08);
   color: var(--text-1);
 }
+
+.mc-login-credit {
+  position: absolute;
+  bottom: 18px; left: 0; right: 0;
+  z-index: 3;
+  display: flex; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.02em;
+}
+.mc-login-credit a {
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  margin-left: 4px;
+  transition: color 0.15s;
+}
+.mc-login-credit a:hover { color: var(--mc-accent); }
