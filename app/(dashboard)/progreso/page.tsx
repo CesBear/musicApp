@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { type PracticeSession } from "@/lib/supabase"
-import { getPracticeSessions, addPracticeSession, deletePracticeSession } from "@/lib/storage"
+import { type PracticeSession, getPracticeSessions, addPracticeSession, deletePracticeSession } from "@/lib/storage"
 import { DEGREE_COLORS } from "@/data/scales"
 
 const MOOD_LABELS = ["", "Frustrado", "Regular", "Bien", "Muy bien", "Excelente"]

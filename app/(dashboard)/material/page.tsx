@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { type Lesson, type LessonMaterial } from "@/lib/supabase"
-import { getLessons, addLesson, updateLesson, deleteLesson, getLessonMaterials } from "@/lib/storage"
+import { type Lesson, type LessonMaterial, getLessons, addLesson, updateLesson, deleteLesson, getLessonMaterials } from "@/lib/storage"
 import { DEGREE_COLORS } from "@/data/scales"
 
 type Tab = "lecciones" | "nueva"
