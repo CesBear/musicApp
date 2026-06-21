@@ -99,7 +99,7 @@ export default function LoginPage() {
         <form className="mc-login-card-v2" onSubmit={handleSubmit}>
           <div className="mc-login-field-v2">
             <span className="mc-login-field-icon"><MailIcon /></span>
-            <input type="email" placeholder="vos@ejemplo.com" value={email} onChange={e => setEmail(e.target.value)} required />
+            <input type="text" placeholder="usuario" value={email} onChange={e => setEmail(e.target.value)} required />
           </div>
           <div className="mc-login-field-v2">
             <span className="mc-login-field-icon"><LockIcon /></span>
