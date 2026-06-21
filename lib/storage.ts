@@ -37,76 +37,65 @@ export type PracticeSession = {
   created_at:   string
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const SESSIONS_KEY = "mc_practice_sessions"
-const LESSONS_KEY  = "mc_lessons"
-
-function uid()  { return crypto.randomUUID() }
-function now()  { return new Date().toISOString() }
-
 // ─── Practice Sessions ───────────────────────────────────────────────────────
 
-export function getPracticeSessions(): PracticeSession[] {
-  if (typeof window === "undefined") return []
-  try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) ?? "[]") }
-  catch { return [] }
+export async function getPracticeSessions(): Promise<PracticeSession[]> {
+  const res = await fetch("/api/sessions")
+  if (!res.ok) return []
+  return res.json()
 }
 
-export function addPracticeSession(
+export async function addPracticeSession(
   data: Omit<PracticeSession, "id" | "created_at">,
-): PracticeSession {
-  const session: PracticeSession = { ...data, id: uid(), created_at: now() }
-  const all = getPracticeSessions()
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify([session, ...all]))
-  return session
+): Promise<PracticeSession> {
+  const res = await fetch("/api/sessions", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(data),
+  })
+  return res.json()
 }
 
-export function deletePracticeSession(id: string): void {
-  localStorage.setItem(
-    SESSIONS_KEY,
-    JSON.stringify(getPracticeSessions().filter(s => s.id !== id)),
-  )
+export async function deletePracticeSession(id: string): Promise<void> {
+  await fetch(`/api/sessions/${id}`, { method: "DELETE" })
 }
 
 // ─── Lessons ─────────────────────────────────────────────────────────────────
 
-export function getLessons(): Lesson[] {
-  if (typeof window === "undefined") return []
-  try { return JSON.parse(localStorage.getItem(LESSONS_KEY) ?? "[]") }
-  catch { return [] }
+export async function getLessons(): Promise<Lesson[]> {
+  const res = await fetch("/api/lessons")
+  if (!res.ok) return []
+  return res.json()
 }
 
-export function addLesson(
+export async function addLesson(
   data: Omit<Lesson, "id" | "created_at" | "updated_at" | "materials">,
-): Lesson {
-  const lesson: Lesson = { ...data, id: uid(), created_at: now(), updated_at: now() }
-  const all = getLessons()
-  localStorage.setItem(LESSONS_KEY, JSON.stringify([lesson, ...all]))
-  return lesson
+): Promise<Lesson> {
+  const res = await fetch("/api/lessons", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(data),
+  })
+  return res.json()
 }
 
-export function updateLesson(
+export async function updateLesson(
   id: string,
   data: Partial<Omit<Lesson, "id" | "created_at" | "materials">>,
-): Lesson | null {
-  const all = getLessons()
-  const idx = all.findIndex(l => l.id === id)
-  if (idx === -1) return null
-  const updated = { ...all[idx], ...data, updated_at: now() }
-  all[idx] = updated
-  localStorage.setItem(LESSONS_KEY, JSON.stringify(all))
-  return updated
+): Promise<Lesson | null> {
+  const res = await fetch(`/api/lessons/${id}`, {
+    method:  "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(data),
+  })
+  if (!res.ok) return null
+  return res.json()
 }
 
-export function deleteLesson(id: string): void {
-  localStorage.setItem(
-    LESSONS_KEY,
-    JSON.stringify(getLessons().filter(l => l.id !== id)),
-  )
+export async function deleteLesson(id: string): Promise<void> {
+  await fetch(`/api/lessons/${id}`, { method: "DELETE" })
 }
 
-// Lesson materials are not editable via UI
 export function getLessonMaterials(_lessonId: string): LessonMaterial[] {
   return []
 }

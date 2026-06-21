@@ -117,25 +117,26 @@ function usePracticeStreak() {
   const [weekMin, setWeekMin] = useState(0)
 
   useEffect(() => {
-    const data = getPracticeSessions()
-    const uniqueDays = [...new Set(data.map(s => s.date))].sort().reverse()
-    setDays(uniqueDays)
+    getPracticeSessions().then(data => {
+      const uniqueDays = [...new Set(data.map(s => s.date))].sort().reverse()
+      setDays(uniqueDays)
 
-    // Streak: consecutive days ending today
-    let s = 0, cursor = getTodayKey()
-    const daySet = new Set(uniqueDays)
-    while (daySet.has(cursor)) {
-      s++
-      const d = new Date(cursor); d.setDate(d.getDate() - 1)
-      cursor = d.toISOString().slice(0, 10)
-    }
-    setStreak(s)
+      // Streak: consecutive days ending today
+      let s = 0, cursor = getTodayKey()
+      const daySet = new Set(uniqueDays)
+      while (daySet.has(cursor)) {
+        s++
+        const d = new Date(cursor); d.setDate(d.getDate() - 1)
+        cursor = d.toISOString().slice(0, 10)
+      }
+      setStreak(s)
 
-    // Week minutes
-    const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - 6)
-    const wk = weekStart.toISOString().slice(0, 10)
-    const wMins = data.filter(s => s.date >= wk).reduce((a, s) => a + s.duration_min, 0)
-    setWeekMin(wMins)
+      // Week minutes
+      const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - 6)
+      const wk = weekStart.toISOString().slice(0, 10)
+      const wMins = data.filter(s => s.date >= wk).reduce((a, s) => a + s.duration_min, 0)
+      setWeekMin(wMins)
+    })
   }, [])
 
   return { days, streak, weekMin }

@@ -46,18 +46,18 @@ export default function ProgresoPage() {
     what: "", notes: "", bpm: "", mood: 3,
   })
 
-  const load = () => {
+  const load = async () => {
     setLoading(true)
-    const data = getPracticeSessions().sort((a, b) => b.date.localeCompare(a.date))
-    setSessions(data)
+    const data = await getPracticeSessions()
+    setSessions(data.sort((a, b) => b.date.localeCompare(a.date)))
     setLoading(false)
   }
 
   useEffect(() => { load() }, [])
 
-  const save = () => {
+  const save = async () => {
     setSaving(true)
-    const data = addPracticeSession({
+    const data = await addPracticeSession({
       date:         form.date,
       duration_min: parseInt(form.duration_min) || 30,
       what:         form.what || null,
@@ -71,8 +71,8 @@ export default function ProgresoPage() {
     setForm({ date: getTodayKey(), duration_min: "30", what: "", notes: "", bpm: "", mood: 3 })
   }
 
-  const del = (id: string) => {
-    deletePracticeSession(id)
+  const del = async (id: string) => {
+    await deletePracticeSession(id)
     setSessions(prev => prev.filter(s => s.id !== id))
   }
 

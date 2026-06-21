@@ -26,9 +26,9 @@ export default function MaterialPage() {
     focus: "", homework: "0", notes: "", status: "current" as Lesson["status"],
   })
 
-  const load = () => {
+  const load = async () => {
     setLoading(true)
-    const data = getLessons()
+    const data = await getLessons()
     setLessons(data)
     if (data.length > 0 && !selected) setSelected(data[0])
     setLoading(false)
@@ -41,16 +41,16 @@ export default function MaterialPage() {
     setMaterials(getLessonMaterials(selected.id))
   }, [selected])
 
-  const markDone = (lesson: Lesson) => {
+  const markDone = async (lesson: Lesson) => {
     const next = lesson.status === "done" ? "current" : "done"
-    updateLesson(lesson.id, { status: next })
+    await updateLesson(lesson.id, { status: next })
     setLessons(prev => prev.map(l => l.id === lesson.id ? { ...l, status: next } : l))
     if (selected?.id === lesson.id) setSelected(prev => prev ? { ...prev, status: next } : prev)
   }
 
-  const saveLesson = () => {
+  const saveLesson = async () => {
     setSaving(true)
-    const data = addLesson({
+    const data = await addLesson({
       week:     form.week,
       title:    form.title,
       date:     form.date,
@@ -67,8 +67,8 @@ export default function MaterialPage() {
     setSaving(false)
   }
 
-  const removeLesson = (id: string) => {
-    deleteLesson(id)
+  const removeLesson = async (id: string) => {
+    await deleteLesson(id)
     setLessons(prev => prev.filter(l => l.id !== id))
     if (selected?.id === id) setSelected(lessons.find(l => l.id !== id) ?? null)
   }
