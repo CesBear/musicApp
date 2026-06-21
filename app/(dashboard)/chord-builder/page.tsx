@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import ChordDiagram from "@/components/ChordDiagram"
 import { CHORD_VOICINGS, CHORD_TYPES, ROOT_NOTES, ChordType, computeTriads, rootToIdx } from "@/data/chords"
-import { GUITAR_TUNING, NOTE_NAMES, DEGREE_COLORS } from "@/data/scales"
+import { GUITAR_TUNING, GUITAR_TUNING_MIDI, NOTE_NAMES, DEGREE_COLORS } from "@/data/scales"
 import { playChord, playGuitarString } from "@/lib/audio"
 
 function baseFretOf(v: { frets: number[] }): number {
@@ -37,7 +37,7 @@ export default function ChordBuilderPage() {
 
   const handleStrum = () => { if (voicing) playChord(voicing.frets) }
   const handleStringPlay = (stringIdx: number, fret: number) => {
-    playGuitarString(40 + GUITAR_TUNING[stringIdx] + fret)
+    playGuitarString(GUITAR_TUNING_MIDI[stringIdx] + fret)
   }
   const orderedNotes = chordNotes.length ? [root, ...chordNotes.filter(n => n !== root)] : []
 

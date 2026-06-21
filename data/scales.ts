@@ -3,6 +3,11 @@ export const NOTE_NAMES      = ["C","C#","D","D#","E","F","F#","G","G#","A","A#"
 export const NOTE_NAMES_FLAT = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
 
 export const GUITAR_TUNING  = [4, 9, 2, 7, 11, 4]
+// Absolute MIDI note of each open string (low E2 → high e4) — use this for
+// fret-to-pitch math. GUITAR_TUNING above is pitch *class* only (0-11, for
+// note-name lookups) and is missing the octave, so `40 + GUITAR_TUNING[i]`
+// is NOT a valid open-string pitch except for string 0.
+export const GUITAR_TUNING_MIDI = [40, 45, 50, 55, 59, 64]
 export const STRING_LABELS  = ["E", "A", "D", "G", "B", "e"]
 
 export const INTERVAL_NAMES  = ["R", "b2", "2", "b3", "3", "4", "b5", "5", "b6", "6", "b7", "7"]

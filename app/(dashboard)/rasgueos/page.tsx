@@ -32,17 +32,21 @@ const PATTERNS: StruPattern[] = [
 const GUITAR_BASE = [40, 45, 50, 55, 59, 64]
 const E_MAJOR     = [0, 2, 2, 1, 0, 0]
 
-function playDown(absWhen: number, now: number) {
+function playDown(absWhen: number, now: number, subDur: number) {
   const rel = absWhen - now
+  // Cap ring time relative to the subdivision so consecutive strums don't
+  // pile up unkilled notes (natural decay can be up to 3.5s, way longer than a strum).
+  const maxDur = subDur * 1.8
   E_MAJOR.forEach((fret, i) => {
-    playGuitarString(GUITAR_BASE[i] + fret, rel + i * 0.034, Math.max(0.090 - i * 0.007, 0.048))
+    playGuitarString(GUITAR_BASE[i] + fret, rel + i * 0.034, Math.max(0.090 - i * 0.007, 0.048), maxDur)
   })
 }
 
-function playUp(absWhen: number, now: number) {
+function playUp(absWhen: number, now: number, subDur: number) {
   const rel = absWhen - now
+  const maxDur = subDur * 1.8
   ;[5, 4, 3, 2].forEach((si, j) => {
-    playGuitarString(GUITAR_BASE[si] + E_MAJOR[si], rel + j * 0.025, Math.max(0.060 - j * 0.005, 0.038))
+    playGuitarString(GUITAR_BASE[si] + E_MAJOR[si], rel + j * 0.025, Math.max(0.060 - j * 0.005, 0.038), maxDur)
   })
 }
 
@@ -99,8 +103,8 @@ export default function RasgeosPage() {
       while (nextNoteTimeRef.current < now + 0.1) {
         const s      = currentSubRef.current % p.subs
         const stroke = p.strokes[s]
-        if (stroke === "D") playDown(nextNoteTimeRef.current, now)
-        else if (stroke === "U") playUp(nextNoteTimeRef.current, now)
+        if (stroke === "D") playDown(nextNoteTimeRef.current, now, d)
+        else if (stroke === "U") playUp(nextNoteTimeRef.current, now, d)
         currentSubRef.current++
         nextNoteTimeRef.current += d
       }

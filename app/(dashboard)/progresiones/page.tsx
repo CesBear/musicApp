@@ -121,16 +121,16 @@ function getVoicings(rootIdx: number, quality: Quality): ChordVoicing[] {
   return [...main, ...triads]
 }
 
-function playTriad(rootIdx: number, quality: Quality, offsetSec: number) {
+function playTriad(rootIdx: number, quality: Quality, offsetSec: number, maxDur?: number) {
   const low   = 12 * 3 + rootIdx
   const root  = 12 * 4 + rootIdx
   const third = quality === "major" ? 4 : 3
   const fifth = quality === "dim"   ? 6 : 7
-  playGuitarString(low,          offsetSec,        0.10)
-  playGuitarString(root,         offsetSec + 0.03, 0.09)
-  playGuitarString(root + third, offsetSec + 0.06, 0.09)
-  playGuitarString(root + fifth, offsetSec + 0.09, 0.09)
-  playGuitarString(root + 12,    offsetSec + 0.12, 0.07)
+  playGuitarString(low,          offsetSec,        0.10, maxDur)
+  playGuitarString(root,         offsetSec + 0.03, 0.09, maxDur)
+  playGuitarString(root + third, offsetSec + 0.06, 0.09, maxDur)
+  playGuitarString(root + fifth, offsetSec + 0.09, 0.09, maxDur)
+  playGuitarString(root + 12,    offsetSec + 0.12, 0.07, maxDur)
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -255,6 +255,10 @@ export default function ProgresionesPage() {
     const secsPerBeat  = 60 / bpm
     const secsPerChord = secsPerBeat * beats
     const total        = progression.length * repeats
+    // Cap each chord's ring time to its own slot — otherwise notes (which can
+    // naturally sustain up to 3.5s) pile up unkilled across chord changes and
+    // the summed voices overwhelm the bus, which is heard as distortion/noise.
+    const ringDur = Math.max(0.25, secsPerChord - 0.08)
 
     for (let rep = 0; rep < repeats; rep++) {
       progression.forEach((degIdx, step) => {
@@ -267,9 +271,9 @@ export default function ProgresionesPage() {
         const savedV = voicingIdxMap[step] ?? 0
         const safeV  = savedV >= stepVoicings.length ? 0 : savedV
         if (stepVoicings.length > 0) {
-          scheduleChord(stepVoicings[safeV].frets, when)
+          scheduleChord(stepVoicings[safeV].frets, when, undefined, ringDur)
         } else {
-          playTriad(chord.rootIdx, chord.quality, when)
+          playTriad(chord.rootIdx, chord.quality, when, ringDur)
         }
 
         timers.current.push(setTimeout(() => setActiveStep(step), when * 1000))

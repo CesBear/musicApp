@@ -1,9 +1,8 @@
-import { GUITAR_TUNING } from "@/data/scales"
+import { GUITAR_TUNING_MIDI } from "@/data/scales"
 
 let _ctx: AudioContext | null = null
 let _bus: GainNode | null = null
 let _wave: PeriodicWave | null = null
-let _excBuf: AudioBuffer | null = null
 let _chordGains: GainNode[] = []
 
 function getMaster(): { ctx: AudioContext; bus: GainNode } {
@@ -13,25 +12,27 @@ function getMaster(): { ctx: AudioContext; bus: GainNode } {
     comp.threshold.value = -14
     comp.knee.value = 8
     comp.ratio.value = 4
-    comp.attack.value = 0.001
+    comp.attack.value = 0.006
     comp.release.value = 0.15
-    comp.connect(_ctx.destination)
+
+    // Brick-wall safety stage: catches any peaks comp lets through before they
+    // hit hard digital clipping at destination (e.g. many voices stacking at once).
+    const limiter = _ctx.createDynamicsCompressor()
+    limiter.threshold.value = -3
+    limiter.knee.value = 0
+    limiter.ratio.value = 20
+    limiter.attack.value = 0.001
+    limiter.release.value = 0.05
+
+    comp.connect(limiter)
+    limiter.connect(_ctx.destination)
+
     _bus = _ctx.createGain()
     _bus.gain.value = 0.60
     _bus.connect(comp)
   }
   if (_ctx.state === "suspended") void _ctx.resume()
   return { ctx: _ctx, bus: _bus! }
-}
-
-function getExcBuffer(ctx: AudioContext): AudioBuffer {
-  if (!_excBuf || _excBuf.sampleRate !== ctx.sampleRate) {
-    const n = Math.ceil(ctx.sampleRate * 0.008)
-    _excBuf = ctx.createBuffer(1, n, ctx.sampleRate)
-    const d = _excBuf.getChannelData(0)
-    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2)
-  }
-  return _excBuf
 }
 
 function midiToFreq(midi: number): number {
@@ -50,12 +51,14 @@ function getGuitarWave(ctx: AudioContext): PeriodicWave {
   return _wave
 }
 
-export function playGuitarString(midi: number, when = 0, gainPeak = 0.11): GainNode {
+export function playGuitarString(midi: number, when = 0, gainPeak = 0.11, maxDur?: number): GainNode {
   const { ctx, bus } = getMaster()
   const t0 = ctx.currentTime + when
   const freq = midiToFreq(midi)
   // Lower strings sustain longer (matches real guitar physics)
-  const dur = Math.max(1.2, 3.5 - freq * 0.005)
+  let dur = Math.max(1.2, 3.5 - freq * 0.005)
+  // Cap ring time so fast-changing sequences don't stack unkilled decaying notes on top of each other
+  if (maxDur !== undefined) dur = Math.min(dur, Math.max(0.15, maxDur))
 
   const osc = ctx.createOscillator()
   osc.setPeriodicWave(getGuitarWave(ctx))
@@ -73,24 +76,12 @@ export function playGuitarString(midi: number, when = 0, gainPeak = 0.11): GainN
   g.gain.linearRampToValueAtTime(gainPeak, t0 + 0.007)
   g.gain.exponentialRampToValueAtTime(0.001, t0 + dur)
 
-  // Short pick transient — buffer is cached to avoid per-call allocation on the main thread
-  const exc = ctx.createBufferSource()
-  exc.buffer = getExcBuffer(ctx)
-  const excG = ctx.createGain()
-  excG.gain.setValueAtTime(0, t0)
-  excG.gain.linearRampToValueAtTime(gainPeak * 0.3, t0 + 0.002)
-  excG.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.014)
-
   osc.connect(lp)
   lp.connect(g)
-  exc.connect(excG)
-  excG.connect(g)
   g.connect(bus)
 
   osc.start(t0)
   osc.stop(t0 + dur + 0.05)
-  exc.start(t0)
-  exc.stop(t0 + 0.01)
 
   setTimeout(() => { try { g.disconnect() } catch { /**/ } }, (when + dur + 0.5) * 1000)
   return g
@@ -125,39 +116,43 @@ export function playTone(midi: number, when = 0, duration = 0.35, gainPeak = 0.1
 }
 
 export function playScale(rootIdx: number, intervals: number[], octave = 4): void {
+  const spacing = 0.18
+  const maxDur  = spacing * 2.2 // let notes ring into the next one a little without endlessly stacking
   intervals.forEach((iv, i) => {
-    playGuitarString(12 * (octave + 1) + rootIdx + iv, i * 0.18, 0.10)
+    playGuitarString(12 * (octave + 1) + rootIdx + iv, i * spacing, 0.10, maxDur)
   })
-  playGuitarString(12 * (octave + 1) + rootIdx + 12, intervals.length * 0.18, 0.10)
+  playGuitarString(12 * (octave + 1) + rootIdx + 12, intervals.length * spacing, 0.10, maxDur)
 }
 
-export function scheduleChord(frets: number[], when: number, tuning = GUITAR_TUNING): void {
+export function scheduleChord(frets: number[], when: number, tuning = GUITAR_TUNING_MIDI, maxDur?: number): void {
   frets.forEach((fret, i) => {
     if (fret < 0) return
-    const midi = 40 + tuning[i] + fret
+    const midi = tuning[i] + fret
     const gain = Math.max(0.09 - i * 0.006, 0.055)
-    playGuitarString(midi, when + i * 0.040, gain)
+    playGuitarString(midi, when + i * 0.040, gain, maxDur)
   })
 }
 
-export function playChord(frets: number[], tuning = GUITAR_TUNING): void {
+export function playChord(frets: number[], tuning = GUITAR_TUNING_MIDI): void {
   const { ctx } = getMaster()
   const now = ctx.currentTime
 
-  // Kill previous chord by directly ramping each gain node to 0.
-  // cancelScheduledValues + ramp is the only reliable way — osc.stop() can't be
-  // called on an already-started node with a future time in all browsers.
+  // Kill previous chord by ramping each gain node to 0 over a few ms —
+  // a hard setValueAtTime(0, now) is an instant step (a click/pop), not silence.
+  const FADE = 0.006
   for (const g of _chordGains) {
     try {
+      const current = g.gain.value
       g.gain.cancelScheduledValues(now)
-      g.gain.setValueAtTime(0, now)  // hard zero — avoids reading mid-automation value
+      g.gain.setValueAtTime(current, now)
+      g.gain.linearRampToValueAtTime(0, now + FADE)
     } catch { /**/ }
   }
   _chordGains = []
 
   frets.forEach((fret, i) => {
     if (fret < 0) return
-    const midi = 40 + tuning[i] + fret
+    const midi = tuning[i] + fret
     const gain = Math.max(0.09 - i * 0.006, 0.055)
     // 20ms base offset ensures t0 is never at ctx.currentTime, avoiding block-boundary artifacts
     _chordGains.push(playGuitarString(midi, 0.020 + i * 0.040, gain))

@@ -1,7 +1,7 @@
 "use client"
 
 import {
-  GUITAR_TUNING, STRING_LABELS, DEGREE_COLORS,
+  GUITAR_TUNING, GUITAR_TUNING_MIDI, STRING_LABELS, DEGREE_COLORS,
   getIntervalLabel,
 } from "@/data/scales"
 
@@ -162,7 +162,7 @@ export default function Fretboard({
 
             return (
               <g key={`${s}-${fret}`} style={{ transition: "opacity 0.22s ease", cursor: onNoteClick ? "pointer" : "default" }} opacity={opacity}
-                 onClick={() => onNoteClick?.({ semi, fret, string: s, midi: 40 + openNote + fret })}>
+                 onClick={() => onNoteClick?.({ semi, fret, string: s, midi: GUITAR_TUNING_MIDI[s] + fret })}>
                 {isRoot && <circle cx={x} cy={y} r={r + 5} fill="url(#rootGlow)" />}
                 {isRoot && (
                   <circle cx={x} cy={y} r={r + 3} fill="none"
