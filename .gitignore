@@ -27,6 +27,7 @@
 # credentials & local config
 /credentials/
 /.claude/
+/database/
 
 # debug
 npm-debug.log*
