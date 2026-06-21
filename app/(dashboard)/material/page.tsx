@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { supabase, type Lesson, type LessonMaterial } from "@/lib/supabase"
+import { type Lesson, type LessonMaterial } from "@/lib/supabase"
+import { getLessons, addLesson, updateLesson, deleteLesson, getLessonMaterials } from "@/lib/storage"
 import { DEGREE_COLORS } from "@/data/scales"
 
 type Tab = "lecciones" | "nueva"
@@ -26,14 +27,11 @@ export default function MaterialPage() {
     focus: "", homework: "0", notes: "", status: "current" as Lesson["status"],
   })
 
-  const load = async () => {
+  const load = () => {
     setLoading(true)
-    const { data } = await supabase
-      .from("lessons")
-      .select("*")
-      .order("created_at", { ascending: false })
-    setLessons(data ?? [])
-    if (data && data.length > 0 && !selected) setSelected(data[0])
+    const data = getLessons()
+    setLessons(data)
+    if (data.length > 0 && !selected) setSelected(data[0])
     setLoading(false)
   }
 
@@ -41,44 +39,37 @@ export default function MaterialPage() {
 
   useEffect(() => {
     if (!selected) return
-    supabase
-      .from("lesson_materials")
-      .select("*")
-      .eq("lesson_id", selected.id)
-      .then(({ data }) => setMaterials(data ?? []))
+    setMaterials(getLessonMaterials(selected.id))
   }, [selected])
 
-  const markDone = async (lesson: Lesson) => {
+  const markDone = (lesson: Lesson) => {
     const next = lesson.status === "done" ? "current" : "done"
-    await supabase.from("lessons").update({ status: next, updated_at: new Date().toISOString() }).eq("id", lesson.id)
+    updateLesson(lesson.id, { status: next })
     setLessons(prev => prev.map(l => l.id === lesson.id ? { ...l, status: next } : l))
     if (selected?.id === lesson.id) setSelected(prev => prev ? { ...prev, status: next } : prev)
   }
 
-  const saveLesson = async () => {
+  const saveLesson = () => {
     setSaving(true)
-    const { data, error } = await supabase.from("lessons").insert({
+    const data = addLesson({
       week:     form.week,
       title:    form.title,
       date:     form.date,
       duration: form.duration,
-      focus:    form.focus,
+      focus:    form.focus || null,
       homework: parseInt(form.homework) || 0,
-      notes:    form.notes,
+      notes:    form.notes || null,
       status:   form.status,
-    }).select().single()
-
-    if (!error && data) {
-      setLessons(prev => [data, ...prev])
-      setSelected(data)
-      setTab("lecciones")
-      setForm({ week: "", title: "", date: "", duration: "60 min", focus: "", homework: "0", notes: "", status: "current" })
-    }
+    })
+    setLessons(prev => [data, ...prev])
+    setSelected(data)
+    setTab("lecciones")
+    setForm({ week: "", title: "", date: "", duration: "60 min", focus: "", homework: "0", notes: "", status: "current" })
     setSaving(false)
   }
 
-  const deleteLesson = async (id: string) => {
-    await supabase.from("lessons").delete().eq("id", id)
+  const removeLesson = (id: string) => {
+    deleteLesson(id)
     setLessons(prev => prev.filter(l => l.id !== id))
     if (selected?.id === id) setSelected(lessons.find(l => l.id !== id) ?? null)
   }
@@ -208,7 +199,7 @@ export default function MaterialPage() {
                   <button className="mc-play-btn" onClick={() => markDone(selected)}>
                     {selected.status === "done" ? "Marcar como pendiente" : "Marcar como practicado ✓"}
                   </button>
-                  <button className="mc-btn-ghost" onClick={() => deleteLesson(selected.id)}
+                  <button className="mc-btn-ghost" onClick={() => removeLesson(selected.id)}
                     style={{ color: "rgba(255,80,80,0.6)" }}>
                     Eliminar
                   </button>

@@ -1,18 +1,26 @@
 import NextAuth from "next-auth"
-import Google from "next-auth/providers/google"
+import Credentials from "next-auth/providers/credentials"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [Google],
-  callbacks: {
-    async signIn({ user }) {
-      return user.email === process.env.ALLOWED_EMAIL
-    },
-    async session({ session, token }) {
-      return session
-    },
-  },
+  providers: [
+    Credentials({
+      credentials: {
+        email:    {},
+        password: {},
+      },
+      async authorize(credentials) {
+        if (
+          credentials.email    === process.env.ALLOWED_EMAIL &&
+          credentials.password === process.env.ALLOWED_PASSWORD
+        ) {
+          return { id: "1", name: "Estudiante", email: credentials.email as string }
+        }
+        return null
+      },
+    }),
+  ],
   pages: {
     signIn: "/login",
-    error: "/login",
+    error:  "/login",
   },
 })

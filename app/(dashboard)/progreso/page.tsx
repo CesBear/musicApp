@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { supabase, type PracticeSession } from "@/lib/supabase"
+import { type PracticeSession } from "@/lib/supabase"
+import { getPracticeSessions, addPracticeSession, deletePracticeSession } from "@/lib/storage"
 import { DEGREE_COLORS } from "@/data/scales"
 
 const MOOD_LABELS = ["", "Frustrado", "Regular", "Bien", "Muy bien", "Excelente"]
@@ -46,36 +47,33 @@ export default function ProgresoPage() {
     what: "", notes: "", bpm: "", mood: 3,
   })
 
-  const load = async () => {
+  const load = () => {
     setLoading(true)
-    const { data } = await supabase
-      .from("practice_sessions")
-      .select("*")
-      .order("date", { ascending: false })
-    setSessions(data ?? [])
+    const data = getPracticeSessions().sort((a, b) => b.date.localeCompare(a.date))
+    setSessions(data)
     setLoading(false)
   }
 
   useEffect(() => { load() }, [])
 
-  const save = async () => {
+  const save = () => {
     setSaving(true)
-    const { data } = await supabase.from("practice_sessions").insert({
+    const data = addPracticeSession({
       date:         form.date,
       duration_min: parseInt(form.duration_min) || 30,
       what:         form.what || null,
       notes:        form.notes || null,
       bpm:          parseInt(form.bpm) || null,
       mood:         form.mood,
-    }).select().single()
-    if (data) setSessions(prev => [data, ...prev])
+    })
+    setSessions(prev => [data, ...prev])
     setShowForm(false)
     setSaving(false)
     setForm({ date: getTodayKey(), duration_min: "30", what: "", notes: "", bpm: "", mood: 3 })
   }
 
-  const del = async (id: string) => {
-    await supabase.from("practice_sessions").delete().eq("id", id)
+  const del = (id: string) => {
+    deletePracticeSession(id)
     setSessions(prev => prev.filter(s => s.id !== id))
   }
 
