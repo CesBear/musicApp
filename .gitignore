@@ -43,3 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Emily guitar source samples (126MB) — only the converted subset in public/samples/emily ships
+/vendor/Emilyguitar

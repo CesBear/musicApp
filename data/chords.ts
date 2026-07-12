@@ -23,7 +23,7 @@ const e6    = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: p===0?[0,2,2,
 const e9    = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: p===0?[0,2,0,1,0,2]:[p,p+2,p,p+1,p,p+2],         fingers: p===0?[0,2,0,1,0,3]:[1,3,1,2,1,4],       barre: p>0?{fret:p,from:0,to:5}:undefined })
 
 // ─── A-shape generators (root on string 5 at fret p) ───────────────────────
-const a     = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: [-1,p,p+2,p+2,p+2,p],       fingers: p===0?[0,0,1,2,3,0]:[0,1,3,3,3,1],       barre: {fret:p===0?2:p+2,from:2,to:4} })
+const a     = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: [-1,p,p+2,p+2,p+2,p],       fingers: p===0?[0,0,1,2,3,0]:[0,1,2,3,4,1],       barre: p>0?{fret:p,from:1,to:5}:undefined })
 const am    = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: [-1,p,p+2,p+2,p+1,p],       fingers: p===0?[0,0,2,3,1,0]:[0,1,3,4,2,1],       barre: p>0?{fret:p,from:1,to:5}:undefined })
 const a7    = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: [-1,p,p+2,p,p+2,p],         fingers: p===0?[0,0,2,0,3,0]:[0,1,3,1,2,1],       barre: p>0?{fret:p,from:1,to:5}:undefined })
 const amaj7 = (p: number): Omit<ChordVoicing,"shape"> => ({ frets: [-1,p,p+2,p+1,p+2,p],       fingers: p===0?[0,0,3,1,4,0]:[0,1,3,2,4,1],       barre: p>0?{fret:p,from:1,to:5}:undefined })
@@ -126,10 +126,10 @@ export const CHORD_VOICINGS: Record<string, Record<ChordType, ChordVoicing[]>> =
     "9":   [ s(e9(2),"E"),    s(a9(9),"A")  ],
   },
   G: {
-    major: [ s({frets:[3,2,0,0,0,3],fingers:[2,1,0,0,0,4]},"G"),  s(e(3),"E"),     s(a(10),"A") ],
+    major: [ s({frets:[3,2,0,0,0,3],fingers:[2,1,0,0,0,3]},"G"),  s(e(3),"E"),     s(a(10),"A") ],
     minor: [ s(em(3),"E"),    s(am(10),"A") ],
     dom7:  [ s({frets:[3,2,0,0,0,1],fingers:[3,2,0,0,0,1]},"G"),  s(e7(3),"E"),    s(a7(10),"A") ],
-    maj7:  [ s({frets:[3,2,0,0,0,2],fingers:[3,2,0,0,0,4]},"G"),  s(emaj7(3),"E"), s(amaj7(10),"A") ],
+    maj7:  [ s({frets:[3,2,0,0,0,2],fingers:[3,2,0,0,0,1]},"G"),  s(emaj7(3),"E"), s(amaj7(10),"A") ],
     m7:    [ s(em7(3),"E"),   s(am7(10),"A") ],
     sus2:  [ s(esus2(3),"E"), s(asus2(10),"A") ],
     sus4:  [ s(esus4(3),"E"), s(asus4(10),"A") ],

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { playMetronomeClick, getAudioTime, ClickSound } from "@/lib/audio"
+import { playMetronomeClick, getAudioTime, getVisualLatencyMs, ClickSound } from "@/lib/audio"
 import { DEGREE_COLORS } from "@/data/scales"
 
 type Subdiv = "none" | "8th"
@@ -78,7 +78,7 @@ export default function Metronome() {
       }
 
       if (!isSub) {
-        const delayMs = Math.max(0, (nextTimeRef.current - audioNow) * 1000)
+        const delayMs = Math.max(0, (nextTimeRef.current - audioNow) * 1000 + getVisualLatencyMs())
         const beat = mainBeat
         setTimeout(() => setBeatViz(beat), delayMs)
       }
