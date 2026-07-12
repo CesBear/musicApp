@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "invite": "tsx scripts/create-invite.ts"
+    "invite": "tsx scripts/create-invite.ts",
+    "ship": "bash scripts/ship.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
