@@ -255,9 +255,9 @@ function getChugBus(ctx: AudioContext, bus: GainNode): GainNode {
     cab.Q.value = 0.7
 
     const out = ctx.createGain()
-    // Calibrado empíricamente: 0.17 → chug ≈0.30, galope solapado ≤0.8 en el peor
-    // caso de fase entre round-robins (el tanh satura, así que escala ~lineal aquí)
-    out.gain.value = 0.17
+    // Calibrado empíricamente contra los samples reales: 0.15 → chug ≈0.26,
+    // galope solapado ≤0.8 en el peor caso de fase entre round-robins
+    out.gain.value = 0.15
 
     pre.connect(shaper); shaper.connect(scoop); scoop.connect(cab); cab.connect(out); out.connect(bus)
     _chugInput = pre
