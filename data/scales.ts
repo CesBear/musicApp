@@ -33,6 +33,7 @@ export const SCALE_TYPES: ScaleType[] = [
   { name: "Mayor",             intervals: [0, 2, 4, 5, 7, 9, 11], group: "major" },
   { name: "Menor Natural",     intervals: [0, 2, 3, 5, 7, 8, 10], group: "minor" },
   { name: "Menor Armónica",    intervals: [0, 2, 3, 5, 7, 8, 11], group: "minor" },
+  { name: "Menor Melódica",    intervals: [0, 2, 3, 5, 7, 9, 11], group: "minor" },
   { name: "Pentatónica Mayor", intervals: [0, 2, 4, 7, 9],        group: "pentatonic" },
   { name: "Pentatónica Menor", intervals: [0, 3, 5, 7, 10],       group: "pentatonic" },
   { name: "Blues",             intervals: [0, 3, 5, 6, 7, 10],    group: "pentatonic" },
@@ -40,6 +41,7 @@ export const SCALE_TYPES: ScaleType[] = [
   { name: "Mixolidia",         intervals: [0, 2, 4, 5, 7, 9, 10], group: "mode" },
   { name: "Frigia",            intervals: [0, 1, 3, 5, 7, 8, 10], group: "mode" },
   { name: "Lidia",             intervals: [0, 2, 4, 6, 7, 9, 11], group: "mode" },
+  { name: "Locrio",            intervals: [0, 1, 3, 5, 6, 8, 10], group: "mode" },
 ]
 
 export type ScaleInfo = { mood: string; description: string; improv: string }
@@ -48,6 +50,7 @@ export const SCALE_INFO: Record<string, ScaleInfo> = {
   "Mayor":             { mood: "Bright · Estable",   description: "Optimista, completamente resuelta — la base de la música occidental.",                improv: "Progresiones I–IV–V, melodías alegres." },
   "Menor Natural":     { mood: "Dark · Melancólico",  description: "Introspectiva, dramática — la base del rock, blues, clásica.",                          improv: "i–VI–III–VII, baladas, rock alternativo." },
   "Menor Armónica":    { mood: "Exotic · Tense",      description: "Menor con séptima elevada. Tensión dramática que resuelve al I con fuerza.",            improv: "Acordes V7 en tonalidades menores." },
+  "Menor Melódica":    { mood: "Sofisticado · Jazz",  description: "Menor con sexta y séptima elevadas al subir. Suaviza la tensión de la armónica.",         improv: "Jazz, líneas m/maj7, sonido 'Bird'." },
   "Pentatónica Mayor": { mood: "Open · Vocal",        description: "Cinco notas que suenan naturales sobre cualquier acorde mayor.",                        improv: "Country, pop, rock mayor. La más segura." },
   "Pentatónica Menor": { mood: "Raw · Bluesy",        description: "Las cinco notas del rock y el blues. La más usada en guitarra eléctrica.",              improv: "Hendrix, Clapton, Page. Blues en I, IV, V." },
   "Blues":             { mood: "Gritty · Soulful",    description: "Pentatónica menor con la nota azul (b5). El sabor del blues clásico.",                  improv: "El b5 como nota de paso entre 4 y 5." },
@@ -55,6 +58,7 @@ export const SCALE_INFO: Record<string, ScaleInfo> = {
   "Mixolidia":         { mood: "Dominant · Funky",    description: "Mayor con séptima bemol. El sonido del rock clásico y el blues eléctrico.",             improv: "Acordes dominantes 7. SRV." },
   "Frigia":            { mood: "Tense · Flamenco",    description: "Segundo modo de la mayor. Oscuro e intenso, sabor mediterráneo o metal.",               improv: "Riffs de metal y flamenco. El b2 lo define." },
   "Lidia":             { mood: "Dreamy · Brillante",  description: "Mayor con cuarta aumentada. Etérea, cinematográfica.",                                   improv: "Maj7#11. Atmósferas flotantes." },
+  "Locrio":            { mood: "Unstable · Oscuro",   description: "Único modo con quinta disminuida. El más inestable, casi nunca suena en reposo.",         improv: "Acordes m7b5. Metal progresivo, ii en jazz." },
 }
 
 export const MAJOR_TRIADS = [

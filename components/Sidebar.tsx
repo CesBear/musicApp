@@ -85,6 +85,15 @@ const Icon = {
       )))}
     </svg>
   ),
+  workout: ({ active }: IconProps) => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="3.2" cy="8" r="1.8" fill="currentColor" opacity={active ? 1 : 0.85}/>
+      <circle cx="12.8" cy="8" r="1.8" fill="currentColor" opacity={active ? 1 : 0.85}/>
+      <line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round"/>
+      <line x1="8" y1="3.5" x2="8" y2="6.5" stroke="currentColor" strokeWidth={active ? 1.4 : 1.1} strokeLinecap="round" opacity="0.5"/>
+      <line x1="8" y1="9.5" x2="8" y2="12.5" stroke="currentColor" strokeWidth={active ? 1.4 : 1.1} strokeLinecap="round" opacity="0.5"/>
+    </svg>
+  ),
   logout: () => (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <path d="M9 3 L4 3 L4 13 L9 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -100,6 +109,7 @@ const NAV = [
   { href: "/chord-builder",   label: "Chord Builder",        icon: Icon.chord  },
   { href: "/progresiones",    label: "Progresiones",         icon: Icon.prog   },
   { href: "/rasgueos",        label: "Rasgueos",             icon: Icon.rhythm },
+  { href: "/entrenamiento",   label: "Entrenamiento",        icon: Icon.workout },
   { href: "/lector",           label: "Lector GP",            icon: Icon.tab    },
   { href: "/material",        label: "Material",             icon: Icon.book   },
   { href: "/progreso",        label: "Mi Progreso",          icon: Icon.progress },
