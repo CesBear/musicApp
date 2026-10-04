@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pushea a master y despliega a producción en Vercel con un solo comando:
-#   ./scripts/ship.sh            → commitea (si hace falta), build, push y deploy
+#   ./scripts/ship.sh            → commitea (si hace falta), build, pruebas, push y deploy
 #   ./scripts/ship.sh "mensaje"  → usa ese mensaje de commit sin preguntar
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -22,11 +22,16 @@ fi
 echo "── Build de verificación ───────────────────"
 npm run build
 
-# 3. Push a master
+# 3. Pruebas: teoría + audio renderizado + navegador. Si algo falla, no se sube nada.
+echo "── Pruebas ─────────────────────────────────"
+npm test
+npm run test:e2e
+
+# 4. Push a master
 echo "── Push a origin/master ────────────────────"
 git push origin master
 
-# 4. Deploy a producción
+# 5. Deploy a producción
 echo "── Deploy a producción (Vercel) ────────────"
 vercel deploy --prod
 

@@ -92,6 +92,12 @@ export function makeQuestion(mode: Mode, level: 1 | 2 | 3, prev?: Question): Que
     // evita Mi♯/Si♯/Fa♭/Do♭ (enarmónicos confusos para empezar)
     if ((acc === 1 && (note.step === 2 || note.step === 6)) || (acc === -1 && (note.step === 3 || note.step === 0))) continue
     if (prev && prev.clef === clef && diatonic(prev.note) === diatonic(note) && prev.note.acc === note.acc) continue
+    // En la guitarra la nota tiene que existir entre la 6ª al aire (Mi2) y la 1ª en el traste 12 (Mi5):
+    // un Mi♭ escrito en el Mi grave sonaría por debajo de la cuerda más grave
+    if (mode === "guitar") {
+      const sounding = midiOf(note) - 12
+      if (sounding < 40 || sounding > 76) continue
+    }
     return { note, clef }
   }
   return { note: n("G4"), clef: "treble" }
