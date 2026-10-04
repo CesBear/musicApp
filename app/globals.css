@@ -1548,3 +1548,21 @@ body::before {
 }
 .sf-feedback[data-state="ok"]  { border-color: oklch(0.75 0.16 145 / 0.5); color: oklch(0.85 0.12 145); }
 .sf-feedback[data-state="bad"] { border-color: oklch(0.68 0.18 25 / 0.5);  color: oklch(0.85 0.10 25); }
+
+/* ─── Panel de sonido (amp) en la barra lateral ────────────────── */
+.mm-amp {
+  display: flex; flex-direction: column; gap: 8px;
+  margin: 14px 0 0; padding: 10px 10px 11px; border-radius: 12px;
+  background: var(--surface-1); border: 1px solid var(--border-1);
+}
+.mm-amp-head { display: flex; align-items: center; gap: 6px; background: none; border: none; padding: 0; cursor: pointer; }
+.mm-amp-presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.mm-amp-presets button {
+  padding: 5px 4px; border-radius: 7px; cursor: pointer; font-size: 11.5px;
+  color: var(--text-2); background: var(--bg-1); border: 1px solid var(--border-1);
+}
+.mm-amp-presets button[data-on] { color: var(--mc-accent); border-color: var(--mc-accent-border); background: var(--mc-accent-soft); }
+.mm-amp-knobs { display: flex; flex-direction: column; gap: 7px; padding-top: 4px; border-top: 1px solid var(--border-1); }
+.mm-amp-knob { display: grid; grid-template-columns: 54px minmax(0, 1fr) 24px; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-2); }
+.mm-amp-val { font-family: var(--font-mono); font-size: 11px; color: var(--text-1); text-align: right; }
+.mm-amp-knob .mc-slider { width: 100%; min-width: 0; }

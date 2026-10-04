@@ -1,10 +1,13 @@
 import { GUITAR_TUNING_MIDI } from "@/data/scales"
 import { getGuitarSample, getMutedSample, preloadGuitarSamples } from "@/lib/sampler"
+import { buildAmp, type AmpChain } from "@/lib/amp"
+import { getAmpSettings, subscribeAmp } from "@/lib/ampSettings"
 
 let _ctx: AudioContext | null = null
 let _bus: GainNode | null = null
 let _wave: PeriodicWave | null = null
 let _chordGains: GainNode[] = []
+let _amp: AmpChain | null = null
 
 // Every guitar voice (sounding or scheduled in the future) registers here so
 // a hard stop can silence pending notes — clearing UI timers isn't enough
@@ -52,12 +55,23 @@ function getMaster(): { ctx: AudioContext; bus: GainNode } {
     _bus.gain.value = 0.60
     _bus.connect(comp)
 
+    // Amplificador + efectos de la guitarra (preset guardado por el usuario)
+    _amp = buildAmp(_ctx, _bus)
+    _amp.apply(getAmpSettings())
+    subscribeAmp(s => _amp?.apply(s))
+
     // Empieza a bajar los samples de guitarra real en cuanto hay contexto;
     // mientras llegan, todo suena con la síntesis de siempre.
     preloadGuitarSamples(_ctx)
   }
   if (_ctx.state === "suspended") void _ctx.resume()
   return { ctx: _ctx, bus: _bus! }
+}
+
+/** Entrada de la cadena de amplificador: todo lo que es guitarra pasa por aquí. */
+function guitarInput(): AudioNode {
+  const { bus } = getMaster()
+  return _amp?.guitarIn ?? bus
 }
 
 function midiToFreq(midi: number): number {
@@ -77,7 +91,7 @@ function getGuitarWave(ctx: AudioContext): PeriodicWave {
 }
 
 export function playGuitarString(midi: number, when = 0, gainPeak = 0.11, maxDur?: number): GainNode {
-  const { ctx, bus } = getMaster()
+  const { ctx } = getMaster()
   const t0 = ctx.currentTime + when
 
   // Sample real (Emily, CC0) si ya está cargado; síntesis mientras tanto.
@@ -99,7 +113,7 @@ export function playGuitarString(midi: number, when = 0, gainPeak = 0.11, maxDur
       end = d
     }
     src.connect(g)
-    g.connect(bus)
+    g.connect(guitarInput())
     src.start(t0)
     src.stop(t0 + end + 0.05)
     const voice: LiveVoice = { g, src }
@@ -135,7 +149,7 @@ export function playGuitarString(midi: number, when = 0, gainPeak = 0.11, maxDur
 
   osc.connect(lp)
   lp.connect(g)
-  g.connect(bus)
+  g.connect(guitarInput())
 
   osc.start(t0)
   osc.stop(t0 + dur + 0.05)
@@ -259,7 +273,7 @@ function getChugBus(ctx: AudioContext, bus: GainNode): GainNode {
     // galope solapado ≤0.8 en el peor caso de fase entre round-robins
     out.gain.value = 0.15
 
-    pre.connect(shaper); shaper.connect(scoop); scoop.connect(cab); cab.connect(out); out.connect(bus)
+    pre.connect(shaper); shaper.connect(scoop); scoop.connect(cab); cab.connect(out); out.connect(_amp?.fxIn ?? bus)
     _chugInput = pre
   }
   return _chugInput
@@ -352,7 +366,7 @@ export function playChugChord(when = 0, velocity = 1, open = false, maxDur?: num
 
 // Percussive muted strum ("chuck"): noise snap + low thump, no pitch.
 export function playMutedStrum(when = 0, velocity = 1): void {
-  const { ctx, bus } = getMaster()
+  const { ctx } = getMaster()
   const t0 = ctx.currentTime + when
 
   // Chuck real sampleado si ya cargó (round-robin entre 25 variantes)
@@ -364,7 +378,7 @@ export function playMutedStrum(when = 0, velocity = 1): void {
     const g = ctx.createGain()
     g.gain.value = smp.gain
     src.connect(g)
-    g.connect(bus)
+    g.connect(guitarInput())
     src.start(t0)
     return
   }
@@ -380,7 +394,7 @@ export function playMutedStrum(when = 0, velocity = 1): void {
   const g = ctx.createGain()
   g.gain.setValueAtTime(0.40 * velocity, t0)
   g.gain.exponentialRampToValueAtTime(0.001, t0 + dur)
-  src.connect(bp); bp.connect(g); g.connect(bus)
+  src.connect(bp); bp.connect(g); g.connect(guitarInput())
   src.start(t0); src.stop(t0 + dur + 0.01)
 
   const osc = ctx.createOscillator()
@@ -391,7 +405,7 @@ export function playMutedStrum(when = 0, velocity = 1): void {
   g2.gain.setValueAtTime(0, t0)
   g2.gain.linearRampToValueAtTime(0.16 * velocity, t0 + 0.004)
   g2.gain.exponentialRampToValueAtTime(0.001, t0 + 0.09)
-  osc.connect(g2); g2.connect(bus)
+  osc.connect(g2); g2.connect(guitarInput())
   osc.start(t0); osc.stop(t0 + 0.1)
 }
 
@@ -484,4 +498,9 @@ export function playMetronomeClick(
     src.connect(hp); hp.connect(g); g.connect(bus)
     src.start(t0); src.stop(t0 + dur + 0.005)
   }
+}
+
+/** Contexto y bus de mezcla (antes del compresor maestro), para la banda de acompañamiento. */
+export function getMixer(): { ctx: AudioContext; bus: GainNode } {
+  return getMaster()
 }

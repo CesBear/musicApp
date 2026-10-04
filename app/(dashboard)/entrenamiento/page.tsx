@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from "react"
-import { playTone } from "@/lib/audio"
+import { playTone, playGuitarString } from "@/lib/audio"
 import { getPracticeSessions, addPracticeSession, deletePracticeSession, type PracticeSession } from "@/lib/storage"
 import Metronome from "@/components/Metronome"
 import TabDiagram, { type TabExercise } from "@/components/TabDiagram"
@@ -42,8 +42,8 @@ function EarTrainer({ pool }: { pool: number[] }) {
 
   const playInterval = (semi: number) => {
     const root = 55 + Math.floor(Math.random() * 8)
-    playTone(root, 0.02, 0.55, 0.16)
-    playTone(root + semi, 0.75, 0.55, 0.16)
+    playGuitarString(root, 0.02, 0.11, 0.9)
+    playGuitarString(root + semi, 0.75, 0.11, 1.4)
     rootRef.current = root
   }
 
@@ -61,8 +61,8 @@ function EarTrainer({ pool }: { pool: number[] }) {
 
   const replay = () => {
     if (target === null) return
-    playTone(rootRef.current, 0.02, 0.55, 0.16)
-    playTone(rootRef.current + target, 0.75, 0.55, 0.16)
+    playGuitarString(rootRef.current, 0.02, 0.11, 0.9)
+    playGuitarString(rootRef.current + target, 0.75, 0.11, 1.4)
   }
 
   return (

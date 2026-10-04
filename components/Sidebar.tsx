@@ -6,6 +6,7 @@ import { signOut, useSession } from "next-auth/react"
 import { getPracticeSessions } from "@/lib/storage"
 import { useEffect, useState } from "react"
 import { DEGREE_COLORS } from "@/data/scales"
+import AmpPanel from "@/components/AmpPanel"
 
 type IconProps = { active?: boolean }
 
@@ -218,6 +219,8 @@ export default function Sidebar() {
           )
         })}
       </nav>
+
+      <AmpPanel />
 
       <div className="mc-practice-card">
         <div className="mc-practice-head">

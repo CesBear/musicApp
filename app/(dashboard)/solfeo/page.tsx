@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import Staff, { type StaffItem } from "@/components/Staff"
 import FretboardNeck from "@/components/FretboardNeck"
-import { playTone, playGuitarString } from "@/lib/audio"
+import { playGuitarString } from "@/lib/audio"
 import { GUITAR_TUNING_MIDI } from "@/data/scales"
 import {
   LESSONS, MODES, LEVELS, FIGURES, SOLFEGE, LETTERS,
@@ -31,7 +31,8 @@ function playWritten(q: Question, mode: Mode) {
   const midi = midiOf(q.note)
   // La guitarra suena una octava más grave de lo escrito
   if (mode === "guitar") playGuitarString(midi - 12, 0.02, 0.11, 1.6)
-  else playTone(midi, 0.02, 0.9, 0.16)   // playTone recibe tiempo relativo (segundos desde ahora)
+  // Las claves de sol y fa suenan a la altura escrita, también con la guitarra real
+  else playGuitarString(midi, 0.02, 0.11, 2)
 }
 
 // ─── Aprender ─────────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ function FiguresTable() {
     // Un compás de 4/4 a 80 BPM lleno de la figura elegida
     const beat = 60 / 80
     const count = Math.round(4 / dur)
-    for (let i = 0; i < count; i++) playTone(i === 0 ? 72 : 67, 0.05 + i * dur * beat, Math.max(0.08, dur * beat * 0.85), 0.14)
+    for (let i = 0; i < count; i++) playGuitarString(i === 0 ? 67 : 64, 0.05 + i * dur * beat, i === 0 ? 0.11 : 0.08, Math.max(0.1, dur * beat * 0.9))
   }
   return (
     <div className="sf-figures">

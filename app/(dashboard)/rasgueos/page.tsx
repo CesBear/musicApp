@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { playMetronomeClick, getAudioTime, getVisualLatencyMs } from "@/lib/audio"
 import { playStroke, progressionOf } from "@/lib/rhythmAudio"
+import { grooveFor, playBandStep, bassRoot, setBandVolume } from "@/lib/band"
 import Metronome from "@/components/Metronome"
 
 import {
@@ -71,6 +72,9 @@ export default function RasgeosPage() {
   const [activeBar, setActiveBar] = useState(-1)
   const [clickOn, setClickOn]     = useState(true)
   const [trainerOn, setTrainerOn] = useState(false)
+  // Banda de acompañamiento (batería + bajo) que sigue el género y los acordes
+  const [bandOn, setBandOn]       = useState(true)
+  const [bandVol, setBandVol]     = useState(0.8)
 
   const category = CATEGORIES.find(c => c.id === catId) ?? null
   const patternPanelRef = useRef<HTMLDivElement>(null)
@@ -84,11 +88,14 @@ export default function RasgeosPage() {
   const playingRef      = useRef(false)
   const clickRef        = useRef(clickOn)
   const trainerRef      = useRef(trainerOn)
+  const bandRef         = useRef(bandOn)
 
   useEffect(() => { bpmRef.current = bpm }, [bpm])
   useEffect(() => { patternRef.current = pattern }, [pattern])
   useEffect(() => { clickRef.current = clickOn }, [clickOn])
   useEffect(() => { trainerRef.current = trainerOn }, [trainerOn])
+  useEffect(() => { bandRef.current = bandOn }, [bandOn])
+  useEffect(() => { if (playing) setBandVolume(bandVol) }, [bandVol, playing])
 
   const stop = useCallback(() => {
     playingRef.current = false
@@ -138,10 +145,16 @@ export default function RasgeosPage() {
           }
         }
 
-        if (clickRef.current && s % spb === 0) {
+        // Con la banda tocando, la batería ya marca el tiempo: el click solo cuenta la entrada
+        if (clickRef.current && !bandRef.current && s % spb === 0) {
           playMetronomeClick(s === 0 ? "accent" : "beat", nextNoteTimeRef.current, "rim")
         }
         playStroke(pat, s, bar, nextNoteTimeRef.current, now, d)
+        if (bandRef.current) {
+          const roots = pat.voice === "chug" ? (pat.powerRoots ?? [40]) : (pat.chords ?? ["E"])
+          playBandStep(grooveFor(pat), s / spb, 1 / spb, nextNoteTimeRef.current - now, 60 / bpmRef.current,
+            bassRoot(roots[bar % roots.length]))
+        }
 
         const delayMs = Math.max(0, (nextNoteTimeRef.current - now) * 1000 + getVisualLatencyMs())
         setTimeout(() => { if (playingRef.current) setActiveSub(s) }, delayMs)
@@ -519,6 +532,16 @@ export default function RasgeosPage() {
           <button onClick={() => setClickOn(v => !v)} style={togglePill(clickOn)} title="Click de metrónomo sobre el patrón (con 1 compás de conteo)">
             ♩ CLICK {clickOn ? "ON" : "OFF"}
           </button>
+          <button onClick={() => setBandOn(v => !v)} style={togglePill(bandOn)} title="Batería y bajo que siguen el género y los acordes">
+            🥁 BANDA {bandOn ? "ON" : "OFF"}
+          </button>
+          {bandOn && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-2)" }}>
+              {grooveFor(pattern).label}
+              <input type="range" min={0} max={1.2} step={0.05} value={bandVol} onChange={e => setBandVol(Number(e.target.value))}
+                className="mc-slider" style={{ width: 90 }} aria-label="Volumen de la banda" />
+            </span>
+          )}
           <button onClick={() => setTrainerOn(v => !v)} style={togglePill(trainerOn)} title="Sube 4 BPM automáticamente cada 4 compases">
             ⤴ +BPM AUTO {trainerOn ? "ON" : "OFF"}
           </button>
