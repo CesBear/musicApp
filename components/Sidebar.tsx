@@ -94,6 +94,15 @@ const Icon = {
       <line x1="8" y1="9.5" x2="8" y2="12.5" stroke="currentColor" strokeWidth={active ? 1.4 : 1.1} strokeLinecap="round" opacity="0.5"/>
     </svg>
   ),
+  staff: ({ active }: IconProps) => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      {[3.5, 6, 8.5, 11, 13.5].map(y => (
+        <line key={y} x1="1.5" y1={y} x2="14.5" y2={y} stroke="currentColor" strokeWidth={active ? 1.1 : 0.9} opacity="0.5"/>
+      ))}
+      <ellipse cx="7" cy="9.75" rx="2.1" ry="1.5" transform="rotate(-20 7 9.75)" fill="currentColor"/>
+      <line x1="8.9" y1="9.4" x2="8.9" y2="2.5" stroke="currentColor" strokeWidth={active ? 1.5 : 1.3} strokeLinecap="round"/>
+    </svg>
+  ),
   logout: () => (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <path d="M9 3 L4 3 L4 13 L9 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -109,6 +118,7 @@ const NAV = [
   { href: "/chord-builder",   label: "Chord Builder",        icon: Icon.chord  },
   { href: "/progresiones",    label: "Progresiones",         icon: Icon.prog   },
   { href: "/rasgueos",        label: "Rasgueos",             icon: Icon.rhythm },
+  { href: "/solfeo",          label: "Solfeo",               icon: Icon.staff  },
   { href: "/entrenamiento",   label: "Entrenamiento",        icon: Icon.workout },
   { href: "/lector",           label: "Lector GP",            icon: Icon.tab    },
   { href: "/material",        label: "Material",             icon: Icon.book   },
