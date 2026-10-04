@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { n, staffPos, fromPos, midiOf, placeName, makeQuestion, LESSONS, MODES, type Mode } from "@/data/solfeo"
+import { n, staffPos, fromPos, midiOf, placeName, makeQuestion, guitarSpots, judgeGuitarAnswer, LESSONS, MODES, type Mode } from "@/data/solfeo"
 
 describe("pentagrama", () => {
   it("anclas de la clave de sol", () => {
@@ -68,5 +68,30 @@ describe("ejercicios", () => {
       const spots = [40, 45, 50, 55, 59, 64].filter(open => sounding - open >= 0 && sounding - open <= 12)
       expect(spots.length, `nota ${sounding}`).toBeGreaterThan(0)
     }
+  })
+})
+
+describe("respuestas en el mástil (modo guitarra)", () => {
+  // Caso real: Sol♭ en la 2ª línea → Sol♭4 escrito → suena Sol♭3
+  const gb = n("Gb4")
+  it("las posiciones correctas son 4ª cuerda traste 4 y 5ª cuerda traste 9", () => {
+    expect(guitarSpots(gb)).toEqual([{ string: 1, fret: 9 }, { string: 2, fret: 4 }])
+  })
+  it("acertar la posición es correcto", () => {
+    expect(judgeGuitarAnswer(gb, 2, 4, "solfege")).toEqual({ kind: "ok", text: "Sol♭3 en la 4ª cuerda traste 4" })
+  })
+  it("la misma nota una octava abajo se explica como error de octava", () => {
+    const v = judgeGuitarAnswer(gb, 0, 2, "solfege")       // 6ª cuerda traste 2 = Sol♭2
+    expect(v.kind).toBe("octave")
+    expect(v.text).toBe("Tocaste Sol♭2 (6ª cuerda traste 2): la nota es correcta pero una octava más grave. Aquí suena Sol♭3: 5ª cuerda traste 9 o 4ª cuerda traste 4.")
+  })
+  it("una nota distinta dice cuál tocaste", () => {
+    const v = judgeGuitarAnswer(gb, 0, 5, "letters")        // La2
+    expect(v.kind).toBe("wrong")
+    expect(v.text).toContain("Tocaste A2")
+    expect(v.text).toContain("Era G♭3")
+  })
+  it("las cuerdas al aire se nombran «al aire»", () => {
+    expect(judgeGuitarAnswer(n("E3"), 0, 0, "solfege").text).toBe("Mi2 en la 6ª al aire")
   })
 })

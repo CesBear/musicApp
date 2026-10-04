@@ -1,5 +1,6 @@
 // Solfeo: modelo de notas en el pentagrama (clave de sol y de fa), lecciones y
 // generador de ejercicios. Lo consume app/(dashboard)/solfeo/page.tsx.
+import { GUITAR_TUNING_MIDI } from "@/data/scales"
 
 export type Clef = "treble" | "bass"
 export type Acc = -1 | 0 | 1                 // bemol, natural, sostenido
@@ -49,6 +50,53 @@ export function placeName(pos: number): string {
   }
   const k = Math.floor((pos - 8) / 2)
   return pos % 2 === 0 ? `${k}ª línea adicional arriba` : `encima de la ${k}ª línea adicional`
+}
+
+// ─── Respuestas en el mástil ──────────────────────────────────────────────────
+
+const STRING_ORD = ["6ª", "5ª", "4ª", "3ª", "2ª", "1ª"]
+const CHROMA_SOLFEGE = ["Do", "Do♯", "Re", "Re♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si"]
+const CHROMA_LETTERS = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]
+const octaveOf = (midi: number) => Math.floor(midi / 12) - 1
+
+/** Dónde se toca en la guitarra una nota escrita (que suena una octava más grave), hasta el traste maxFret. */
+export function guitarSpots(note: Note, maxFret = 12): { string: number; fret: number }[] {
+  const sounding = midiOf(note) - 12
+  return GUITAR_TUNING_MIDI.flatMap((open, string) => {
+    const fret = sounding - open
+    return fret >= 0 && fret <= maxFret ? [{ string, fret }] : []
+  })
+}
+
+const spotName = (x: { string: number; fret: number }) => x.fret === 0 ? `${STRING_ORD[x.string]} al aire` : `${STRING_ORD[x.string]} cuerda traste ${x.fret}`
+const listSpots = (note: Note) => {
+  const names = guitarSpots(note).map(spotName)
+  return names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} o ${names[names.length - 1]}`
+}
+
+export type GuitarVerdict = { kind: "ok" | "octave" | "wrong"; text: string }
+
+/**
+ * Evalúa un clic en el mástil. Si la nota es la correcta pero en otra octava se dice
+ * así: leer es también saber qué tan aguda va la nota, pero no es lo mismo que no
+ * reconocerla.
+ */
+export function judgeGuitarAnswer(note: Note, string: number, fret: number, system: "solfege" | "letters"): GuitarVerdict {
+  const target = midiOf(note) - 12
+  const played = GUITAR_TUNING_MIDI[string] + fret
+  const targetName = noteName(note, system) + octaveOf(target)
+  const where = spotName({ string, fret })
+  // La nota tocada se escribe igual que la pedida si es la misma (Sol♭, no Fa♯)
+  const sameClass = (played - target) % 12 === 0
+  const playedName = (sameClass ? noteName(note, system) : (system === "solfege" ? CHROMA_SOLFEGE : CHROMA_LETTERS)[played % 12]) + octaveOf(played)
+  if (played === target) return { kind: "ok", text: `${targetName} en la ${where}` }
+  if (sameClass) {
+    const diff = (played - target) / 12
+    const dir = diff < 0 ? "más grave" : "más aguda"
+    const n = Math.abs(diff) === 1 ? "una octava" : `${Math.abs(diff)} octavas`
+    return { kind: "octave", text: `Tocaste ${playedName} (${where}): la nota es correcta pero ${n} ${dir}. Aquí suena ${targetName}: ${listSpots(note)}.` }
+  }
+  return { kind: "wrong", text: `Tocaste ${playedName} (${where}). Era ${targetName}: ${listSpots(note)}.` }
 }
 
 // ─── Ejercicios ───────────────────────────────────────────────────────────────

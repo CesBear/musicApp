@@ -7,7 +7,7 @@ import { playGuitarString } from "@/lib/audio"
 import { GUITAR_TUNING_MIDI } from "@/data/scales"
 import {
   LESSONS, MODES, LEVELS, FIGURES, SOLFEGE, LETTERS,
-  n, midiOf, noteName, staffPos, placeName, makeQuestion,
+  n, midiOf, noteName, staffPos, placeName, makeQuestion, judgeGuitarAnswer, guitarSpots,
   type Mode, type Question, type Acc, type Lesson,
 } from "@/data/solfeo"
 
@@ -89,7 +89,7 @@ function LessonCard({ lesson, index, system }: { lesson: Lesson; index: number; 
 
 // ─── Practicar ────────────────────────────────────────────────────────────────
 
-type Feedback = { ok: boolean; answer: string; place: string } | null
+type Feedback = { ok: boolean; answer: string; place: string; detail?: string; octave?: boolean } | null
 
 function Practice({ system }: { system: NameSystem }) {
   const [mode, setMode]   = useState<Mode>("treble")
@@ -147,10 +147,10 @@ function Practice({ system }: { system: NameSystem }) {
     return () => clearInterval(id)
   }, [challengeEnd])
 
-  const answer = (correct: boolean) => {
+  const answer = (correct: boolean, detail?: string, octave?: boolean) => {
     if (feedback) return
     const pos = staffPos(q.note, q.clef)
-    setFeedback({ ok: correct, answer: noteName(q.note, system), place: placeName(pos) })
+    setFeedback({ ok: correct, answer: noteName(q.note, system), place: placeName(pos), detail, octave })
     setScore(s => {
       const streak = correct ? s.streak + 1 : 0
       if (streak > best) { setBest(streak); try { localStorage.setItem(bestKey, String(streak)) } catch { /**/ } }
@@ -166,7 +166,8 @@ function Practice({ system }: { system: NameSystem }) {
   const answerFret = (s: number, f: number) => {
     if (feedback) return
     setClicked({ s, f })
-    answer(GUITAR_TUNING_MIDI[s] + f === midiOf(q.note) - 12)
+    const v = judgeGuitarAnswer(q.note, s, f, system)
+    answer(v.kind === "ok", v.text, v.kind === "octave")
   }
 
   // Teclado: C D E F G A B o 1–7; espacio/enter = siguiente
@@ -189,10 +190,7 @@ function Practice({ system }: { system: NameSystem }) {
     next(mode, level, q)
   }
 
-  const sounding = midiOf(q.note) - 12
-  const correctSpots = mode === "guitar"
-    ? GUITAR_TUNING_MIDI.flatMap((open, s) => Array.from({ length: 13 }, (_, f) => f).filter(f => open + f === sounding).map(f => ({ s, f })))
-    : []
+  const correctSpots = mode === "guitar" ? guitarSpots(q.note).map(x => ({ s: x.string, f: x.fret })) : []
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -295,7 +293,14 @@ function Practice({ system }: { system: NameSystem }) {
         <div className="sf-feedback" data-state={feedback ? (feedback.ok ? "ok" : "bad") : undefined}>
           {feedback ? (
             <>
-              <span>{feedback.ok ? "✓ Correcto:" : "✕ Era"} <b>{feedback.answer}</b> · {feedback.place}{q.clef === "bass" ? " (clave de fa)" : mode === "grand" ? " (clave de sol)" : ""}</span>
+              {feedback.detail ? (
+                <span>
+                  {feedback.ok ? "✓ Correcto: " : feedback.octave ? "≈ Casi. " : "✕ "}
+                  <b>{feedback.answer}</b> · {feedback.place}. {feedback.detail}
+                </span>
+              ) : (
+                <span>{feedback.ok ? "✓ Correcto:" : "✕ Era"} <b>{feedback.answer}</b> · {feedback.place}{q.clef === "bass" ? " (clave de fa)" : mode === "grand" ? " (clave de sol)" : ""}</span>
+              )}
               {!feedback.ok && <button className="mc-play-btn" style={{ padding: "7px 16px" }} onClick={() => next(mode, level, q)}>Siguiente →</button>}
             </>
           ) : (
