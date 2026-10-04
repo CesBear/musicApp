@@ -80,3 +80,21 @@ test("Panel Sonido: el preset se guarda y sobrevive a recargar", async ({ page }
   await expect(page.locator(".mm-amp-presets button[data-on]")).toHaveText("Lead")
   await page.locator(".mm-amp-presets button", { hasText: "Limpio" }).click()
 })
+
+test("Progresiones: la base suena con banda y el panel sigue al acorde", async ({ page }) => {
+  const errors = await instrument(page)
+  await page.goto("/progresiones", { waitUntil: "networkidle" })
+  await page.locator(".pg-preset", { hasText: "V/vi" }).click()       // C · E7 · Am · F
+  await page.waitForTimeout(3000)                                      // carga samples y avanza el reloj
+  await resetStarts(page)
+  await page.getByRole("button", { name: /Tocar en loop/ }).click()
+  const seen = new Set<string>()
+  for (let k = 0; k < 10; k++) { await page.waitForTimeout(600); seen.add((await page.locator(".pg-now").innerText()).split("\n")[1]) }
+  await page.getByRole("button", { name: /Parar/ }).click()
+  const starts = await expectPromptSound(page, "Progresiones")
+  expect(starts.filter(s => s.kind === "AudioBufferSourceNode").length, "la guitarra no sonó").toBeGreaterThan(20)
+  expect(starts.filter(s => s.kind === "OscillatorNode").length, "la banda no sonó").toBeGreaterThan(10)
+  expect([...seen], "el panel no siguió los cambios de acorde").toEqual(expect.arrayContaining(["C", "E7"]))
+  expect(await page.locator(".pg-now").innerText()).not.toContain("A♭")
+  expect(errors).toEqual([])
+})

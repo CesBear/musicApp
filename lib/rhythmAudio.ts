@@ -106,3 +106,25 @@ export function playStroke(pat: StrumPattern, s: number, barIdx: number, absWhen
   }
 }
 
+
+/**
+ * Un golpe de rasgueo sobre cualquier forma de acorde (Progresiones). El bajo (B/b/P)
+ * sale de la cuerda más grave que suena: fundamental y su 5ª.
+ */
+export function playStrokeOnFrets(stroke: StrumPattern["strokes"][number], frets: number[], rel: number, subDur: number, staccato = false) {
+  const low = frets.findIndex(f => f >= 0)
+  const root = low >= 0 ? GUITAR_BASE[low] + frets[low] : 40
+  switch (stroke) {
+    case "D": playDown(rel, 0, subDur, frets, 1, staccato); break
+    case "U": playUp(rel, 0, subDur, frets, 1, staccato); break
+    case "d": playDown(rel, 0, subDur, frets, GHOST_VEL, staccato); break
+    case "u": playUp(rel, 0, subDur, frets, GHOST_VEL, staccato); break
+    case "x": playMutedStrum(rel, staccato ? 0.6 : 1); break
+    case "B": playGuitarString(root, rel, 0.12, subDur * 3); break
+    case "b": playGuitarString(root + 7, rel, 0.12, subDur * 3); break
+    case "P":
+      playGuitarString(root, rel, 0.11, subDur * 3)
+      ;[3, 4, 5].forEach(si => { if (frets[si] >= 0) playGuitarString(GUITAR_BASE[si] + frets[si], rel + 0.004, 0.06, subDur * 2.2) })
+      break
+  }
+}

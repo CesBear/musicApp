@@ -1,251 +1,200 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { NOTE_NAMES, NOTE_NAMES_FLAT, DEGREE_COLORS } from "@/data/scales"
-import { CIRCLE_NOTES } from "@/data/circle"
-import { CHORD_VOICINGS, ChordVoicing, computeTriads } from "@/data/chords"
-import { playGuitarString, playChord, scheduleChord, getAudioTime, getVisualLatencyMs, stopAllGuitarNotes } from "@/lib/audio"
+import { ALL_PATTERNS } from "@/data/rhythms"
+import { playChord, scheduleChord, getAudioTime, getVisualLatencyMs, stopAllGuitarNotes } from "@/lib/audio"
+import { playStrokeOnFrets } from "@/lib/rhythmAudio"
+import { grooveFor, playBandStep, bassFromPc, setBandVolume } from "@/lib/band"
+import {
+  palette, voicingsFor, keyScales, keyName as keyTitle, PROGRESSION_PRESETS, IMPROV_CHALLENGES,
+  type Mode, type HarmonyChord, type ChallengeFocus,
+} from "@/lib/harmony"
 import ChordDiagram from "@/components/ChordDiagram"
+import Fretboard from "@/components/Fretboard"
+import type { ChordVoicing } from "@/data/chords"
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Constantes ───────────────────────────────────────────────────────────────
 
-type Quality = "major" | "minor" | "dim"
-type Mode    = "major" | "minor"
-
-type DiatonicChord = {
-  degree:  string
-  rootIdx: number
-  quality: Quality
-  name:    string
-}
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-// "oklch(L C H)" → "oklch(L C H / a)" (los FUNC_COLOR son hex y aceptan sufijo, DEGREE_COLORS no)
-const alphaOk = (color: string, a: number) => `${color.slice(0, -1)} / ${a})`
-
-const FUNC_COLOR: Record<string, string> = {
-  "I":    "#c89535", "vi":   "#c89535", "i":    "#c89535",
-  "♭III": "#c89535", "VI":   "#c89535",
-  "IV":   "#4a7fc4", "ii":   "#4a7fc4", "iv":   "#4a7fc4", "♭VI":  "#4a7fc4",
-  "V":    "#c4503a", "iii":  "#c4503a", "v":    "#c4503a", "♭VII": "#c4503a",
-  "vii°": "#8b5ba8", "ii°":  "#8b5ba8",
-}
-
-const FUNC_NAME: Record<string, string> = {
-  "I": "Tónica", "i": "Tónica", "vi": "Tónica relativa", "♭III": "Tónica relativa", "VI": "Tónica",
-  "IV": "Subdominante", "ii": "Subdominante", "iv": "Subdominante", "♭VI": "Subdominante", "ii°": "Subdominante",
-  "V": "Dominante", "v": "Dominante", "iii": "Mediante", "♭VII": "Subtónica",
-  "vii°": "Sensible",
-}
-
+const FUNC_COLOR: Record<HarmonyChord["func"], string> = { T: "#c89535", S: "#4a7fc4", D: "#c4503a", color: "#8b5ba8" }
 const FUNC_LEGEND = [
-  { label: "tónica",       color: "#c89535" },
-  { label: "subdominante", color: "#4a7fc4" },
-  { label: "dominante",    color: "#c4503a" },
-  { label: "sensible",     color: "#8b5ba8" },
+  { label: "tónica", color: FUNC_COLOR.T }, { label: "subdominante", color: FUNC_COLOR.S },
+  { label: "dominante", color: FUNC_COLOR.D }, { label: "color", color: FUNC_COLOR.color },
 ]
+const GROUPS: { id: HarmonyChord["group"]; label: string; hint: string }[] = [
+  { id: "diatonic", label: "Diatónicos", hint: "los 7 acordes de la tonalidad · teclas 1–7" },
+  { id: "borrowed", label: "Prestados", hint: "de la tonalidad paralela: color sin salir de la tónica" },
+  { id: "secondary", label: "Dominantes secundarias", hint: "el V7 de otro acorde: lo hacen sonar como destino" },
+]
+const QUALITY_LABEL: Record<HarmonyChord["quality"], string> = { major: "MAY", minor: "MEN", dim: "DIM", maj7: "MAJ7", m7: "M7", "7": "DOM7", m7b5: "M7♭5" }
 
-const QUALITY_LABEL: Record<Quality, string> = {
-  major: "MAY", minor: "MEN", dim: "DIM",
-}
+// Estilos de acompañamiento: un patrón de Rasgueos (o el acorde sostenido) + el groove de la banda
+const FEELS: { id: string; label: string; pattern: string | null }[] = [
+  { id: "sostenido", label: "Acorde sostenido", pattern: null },
+  { id: "balada", label: "Balada", pattern: "balada" },
+  { id: "pop", label: "Pop", pattern: "pop" },
+  { id: "rock", label: "Rock", pattern: "rock" },
+  { id: "funk", label: "Funk-pop", pattern: "kiko-stabs" },
+  { id: "reggae", label: "Reggae", pattern: "reggae" },
+  { id: "bossa", label: "Bossa nova", pattern: "bossa" },
+  { id: "country", label: "Country", pattern: "country" },
+]
+const SUSTAIN_GROOVE = grooveFor(ALL_PATTERNS.find(p => p.id === "balada")!)
 
-const PRESETS: Record<Mode, { label: string; degrees: number[] }[]> = {
-  major: [
-    { label: "I · IV · V",       degrees: [0, 3, 4]    },
-    { label: "I · V · vi · IV",  degrees: [0, 4, 5, 3] },
-    { label: "I · vi · IV · V",  degrees: [0, 5, 3, 4] },
-    { label: "ii · V · I",       degrees: [1, 4, 0]    },
-    { label: "I · IV · I · V",   degrees: [0, 3, 0, 4] },
-  ],
-  minor: [
-    { label: "i · ♭VII · ♭VI",       degrees: [0, 6, 5]    },
-    { label: "i · iv · v",            degrees: [0, 3, 4]    },
-    { label: "i · ♭III · ♭VII · iv",  degrees: [0, 2, 6, 3] },
-    { label: "i · v · ♭VI · ♭VII",    degrees: [0, 4, 5, 6] },
-    { label: "i · ii° · v · i",       degrees: [0, 1, 4, 0] },
-  ],
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function getPreferFlat(rootIdx: number): boolean {
-  return (CIRCLE_NOTES.find(n => n.rootIdx === rootIdx)?.sharps ?? 0) < 0
-}
-
-function noteName(idx: number, flat: boolean): string {
-  return flat ? NOTE_NAMES_FLAT[idx % 12] : NOTE_NAMES[idx % 12]
-}
-
-function getDiatonic(rootIdx: number, mode: Mode): DiatonicChord[] {
-  const R  = rootIdx
-  const fl = getPreferFlat(R)
-  const n  = (i: number) => noteName((R + i) % 12, fl)
-  if (mode === "major") return [
-    { degree: "I",    rootIdx: R,         quality: "major", name: n(0)        },
-    { degree: "ii",   rootIdx: (R+2)%12,  quality: "minor", name: n(2)  + "m" },
-    { degree: "iii",  rootIdx: (R+4)%12,  quality: "minor", name: n(4)  + "m" },
-    { degree: "IV",   rootIdx: (R+5)%12,  quality: "major", name: n(5)        },
-    { degree: "V",    rootIdx: (R+7)%12,  quality: "major", name: n(7)        },
-    { degree: "vi",   rootIdx: (R+9)%12,  quality: "minor", name: n(9)  + "m" },
-    { degree: "vii°", rootIdx: (R+11)%12, quality: "dim",   name: n(11) + "°" },
-  ]
-  return [
-    { degree: "i",    rootIdx: R,         quality: "minor", name: n(0)  + "m" },
-    { degree: "ii°",  rootIdx: (R+2)%12,  quality: "dim",   name: n(2)  + "°" },
-    { degree: "♭III", rootIdx: (R+3)%12,  quality: "major", name: n(3)        },
-    { degree: "iv",   rootIdx: (R+5)%12,  quality: "minor", name: n(5)  + "m" },
-    { degree: "v",    rootIdx: (R+7)%12,  quality: "minor", name: n(7)  + "m" },
-    { degree: "♭VI",  rootIdx: (R+8)%12,  quality: "major", name: n(8)        },
-    { degree: "♭VII", rootIdx: (R+10)%12, quality: "major", name: n(10)       },
-  ]
-}
-
-function getVoicings(rootIdx: number, quality: Quality): ChordVoicing[] {
-  const sharp = NOTE_NAMES[rootIdx]
-  const flat  = NOTE_NAMES_FLAT[rootIdx]
-  const type  = quality === "major" ? "major" : quality === "minor" ? "minor" : null
-  if (!type) return []
-  const main   = CHORD_VOICINGS[sharp]?.[type] ?? CHORD_VOICINGS[flat]?.[type] ?? []
-  const triads = computeTriads(rootIdx, type)
-  return [...main, ...triads]
-}
-
-function playTriad(rootIdx: number, quality: Quality, offsetSec: number, maxDur?: number) {
-  const low   = 12 * 3 + rootIdx
-  const root  = 12 * 4 + rootIdx
-  const third = quality === "major" ? 4 : 3
-  const fifth = quality === "dim"   ? 6 : 7
-  playGuitarString(low,          offsetSec,        0.10, maxDur)
-  playGuitarString(root,         offsetSec + 0.03, 0.09, maxDur)
-  playGuitarString(root + third, offsetSec + 0.06, 0.09, maxDur)
-  playGuitarString(root + fifth, offsetSec + 0.09, 0.09, maxDur)
-  playGuitarString(root + 12,    offsetSec + 0.12, 0.07, maxDur)
-}
+type ScaleView = "pent" | "key" | "chord"
 
 function baseFretOf(v: ChordVoicing): number {
   const active = v.frets.filter(f => f > 0)
   return active.length ? Math.min(...active) : 0
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Página ───────────────────────────────────────────────────────────────────
 
 export default function ProgresionesPage() {
-  const [rootIdx,     setRootIdx]     = useState(0)
-  const [mode,        setMode]        = useState<Mode>("major")
-  const [progression, setProgression] = useState<number[]>([])
-  const [bpm,         setBpm]         = useState(80)
-  const [beats,       setBeats]       = useState(2)
-  const [repeats,     setRepeats]     = useState<number>(2)  // Infinity = loop
-  const [playing,     setPlaying]     = useState(false)
-  const [activeStep,  setActiveStep]  = useState(-1)
-  const [selectedSlot,  setSelectedSlot]  = useState<number | null>(null)
-  const [voicingIdxMap, setVoicingIdxMap] = useState<Record<number, number>>({})
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const [rootIdx, setRootIdx]       = useState(0)
+  const [mode, setMode]             = useState<Mode>("major")
+  const [sevenths, setSevenths]     = useState(false)
+  const [progression, setProgression] = useState<string[]>([])
+  const [bpm, setBpm]               = useState(80)
+  const [beats, setBeats]           = useState(4)
+  const [repeats, setRepeats]       = useState<number>(Infinity)
+  const [feelId, setFeelId]         = useState("pop")
+  const [bandOn, setBandOn]         = useState(true)
+  const [bandVol, setBandVol]       = useState(0.8)
+  const [playing, setPlaying]       = useState(false)
+  const [activeStep, setActiveStep] = useState(-1)
   const [activeBeat, setActiveBeat] = useState(-1)
-  const [dragIdx,    setDragIdx]    = useState<number | null>(null)
-  const [dragOver,   setDragOver]   = useState<number | null>(null)
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null)
+  const [voicingIdxMap, setVoicingIdxMap] = useState<Record<number, number>>({})
+  const [dragIdx, setDragIdx]       = useState<number | null>(null)
+  const [dragOver, setDragOver]     = useState<number | null>(null)
+  const [scaleView, setScaleView]   = useState<ScaleView>("pent")
+  const [labels, setLabels]         = useState<"notes" | "intervals">("notes")
+  const [challengeIdx, setChallengeIdx] = useState(0)
 
-  const playingRef    = useRef(false)
-  const voicingMapRef = useRef(voicingIdxMap)
-  useEffect(() => { voicingMapRef.current = voicingIdxMap }, [voicingIdxMap])
-  // Snapshot de la pasada en curso: cambiar tonalidad/acordes no rompe el loop
-  const passCfgRef = useRef<{ prog: number[]; chords: DiatonicChord[]; spb: number; spc: number; ring: number; reps: number } | null>(null)
-  const anchorRef  = useRef(0)
+  const chords = useMemo(() => palette(rootIdx, mode, sevenths), [rootIdx, mode, sevenths])
+  const byId = useMemo(() => Object.fromEntries(chords.map(c => [c.id, c])), [chords])
+  const diatonic = chords.filter(c => c.group === "diatonic")
 
-  // Initialize from URL params (e.g. coming from Círculo de Quintas)
+  // Desde el Círculo de Quintas: ?root=7&mode=major
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
     const r = p.get("root"); const m = p.get("mode")
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- parámetros de la URL, solo existen en el navegador
     if (r !== null && !isNaN(parseInt(r))) setRootIdx(parseInt(r))
     if (m === "major" || m === "minor") setMode(m)
   }, [])
 
-  const chords  = getDiatonic(rootIdx, mode)
-  const fl      = getPreferFlat(rootIdx)
-  const keyName = noteName(rootIdx, fl) + (mode === "major" ? " Mayor" : " Menor")
+  // ─── Reproducción (scheduler con lookahead, como Rasgueos) ──────────────────
+  const playingRef   = useRef(false)
+  const schedRef     = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timers       = useRef<ReturnType<typeof setTimeout>[]>([])
+  const nextTimeRef  = useRef(0)
+  const stepRef      = useRef(0)
+  const bpmRef       = useRef(bpm)
+  const bandRef      = useRef(bandOn)
+  useEffect(() => { bpmRef.current = bpm }, [bpm])
+  useEffect(() => { bandRef.current = bandOn }, [bandOn])
+  useEffect(() => { if (playing) setBandVolume(bandVol) }, [bandVol, playing])
+  const cfgRef = useRef<{ ids: string[]; byId: Record<string, HarmonyChord>; voicings: Record<number, number>; feel: typeof FEELS[number]; beats: number; reps: number } | null>(null)
 
-  // Which slot to show in the diagram panel
-  const displaySlot  = playing ? activeStep : selectedSlot
-  const displayChord = displaySlot !== null && displaySlot >= 0 && displaySlot < progression.length
-    ? chords[progression[displaySlot]]
-    : null
-  const voicings       = displayChord ? getVoicings(displayChord.rootIdx, displayChord.quality) : []
-  const rawVoicingIdx  = displaySlot !== null ? (voicingIdxMap[displaySlot] ?? 0) : 0
-  const safeVoicing    = rawVoicingIdx >= voicings.length ? 0 : rawVoicingIdx
-  const displayVoicing = voicings[safeVoicing]
-
-  // ─── Actions ─────────────────────────────────────────────────────────────
-
-  const stop = () => {
+  const stop = useCallback(() => {
     playingRef.current = false
-    timers.current.forEach(clearTimeout)
-    timers.current = []
+    if (schedRef.current) { clearInterval(schedRef.current); schedRef.current = null }
+    timers.current.forEach(clearTimeout); timers.current = []
     stopAllGuitarNotes()
-    setPlaying(false)
-    setActiveStep(-1)
-    setActiveBeat(-1)
+    setPlaying(false); setActiveStep(-1); setActiveBeat(-1)
+  }, [])
+  useEffect(() => () => stop(), [stop])
+
+  const tick = useCallback(() => {
+    const cfg = cfgRef.current
+    if (!cfg || !playingRef.current) return
+    const pat = cfg.feel.pattern ? ALL_PATTERNS.find(p => p.id === cfg.feel.pattern)! : null
+    const spb = pat?.subsPerBeat ?? 1
+    const barSteps = pat ? pat.strokes.length : 4
+    const stepsPerChord = cfg.beats * spb
+    const total = cfg.ids.length * stepsPerChord * cfg.reps
+    const now = getAudioTime()
+    const beatSec = 60 / bpmRef.current
+    const d = beatSec / spb
+    const groove = pat ? grooveFor(pat) : SUSTAIN_GROOVE
+    while (nextTimeRef.current < now + 0.12) {
+      const g = stepRef.current
+      if (g >= total) {
+        const end = (nextTimeRef.current - now + 0.3) * 1000
+        timers.current.push(setTimeout(() => stop(), end))
+        if (schedRef.current) { clearInterval(schedRef.current); schedRef.current = null }
+        return
+      }
+      const slot = Math.floor(g / stepsPerChord) % cfg.ids.length
+      const chord = cfg.byId[cfg.ids[slot]]
+      const vs = voicingsFor(chord)
+      const v = vs[Math.min(cfg.voicings[slot] ?? 0, vs.length - 1)]
+      const rel = nextTimeRef.current - now
+      if (!pat) {
+        if (g % stepsPerChord === 0) scheduleChord(v.frets, rel, undefined, Math.max(0.25, cfg.beats * beatSec - 0.08))
+      } else {
+        playStrokeOnFrets(pat.strokes[g % barSteps], v.frets, rel, d, !!pat.staccato)
+      }
+      if (bandRef.current) playBandStep(groove, (g % barSteps) / spb, 1 / spb, rel, beatSec, bassFromPc(chord.rootIdx))
+      if (g % spb === 0) {
+        const beat = Math.floor((g % stepsPerChord) / spb)
+        const delay = Math.max(0, rel * 1000 + getVisualLatencyMs())
+        timers.current.push(setTimeout(() => { if (playingRef.current) { setActiveStep(slot); setActiveBeat(beat) } }, delay))
+      }
+      stepRef.current++
+      nextTimeRef.current += d
+    }
+  }, [stop])
+
+  const play = () => {
+    if (playingRef.current) { stop(); return }
+    if (progression.length === 0) return
+    cfgRef.current = { ids: [...progression], byId, voicings: { ...voicingIdxMap }, feel: FEELS.find(f => f.id === feelId)!, beats, reps: repeats }
+    stepRef.current = 0
+    nextTimeRef.current = getAudioTime() + 0.1
+    playingRef.current = true
+    setPlaying(true); setSelectedSlot(null)
+    setBandVolume(bandVol)
+    schedRef.current = setInterval(tick, 25)
   }
 
-  const resetKey = () => { stop(); setProgression([]); setSelectedSlot(null); setVoicingIdxMap({}) }
-
-  const handleRootChange = (i: number) => { setRootIdx(i);  resetKey() }
-  const handleModeChange = (m: Mode)   => { setMode(m);     resetKey() }
-
-  const previewChord = (chord: DiatonicChord, voicingIdx = 0) => {
-    const vs = getVoicings(chord.rootIdx, chord.quality)
-    const idx = voicingIdx < vs.length ? voicingIdx : 0
-    if (vs.length > 0) playChord(vs[idx].frets)
-    else playTriad(chord.rootIdx, chord.quality, 0.02, 1.4)
+  // ─── Edición de la progresión ──────────────────────────────────────────────
+  const previewChord = (c: HarmonyChord, vIdx = 0) => {
+    const vs = voicingsFor(c)
+    if (vs.length) playChord(vs[Math.min(vIdx, vs.length - 1)].frets)
   }
-
-  const addChord = (degIdx: number) => {
+  const addChord = (id: string) => {
     if (progression.length >= 8) return
-    setProgression(p => [...p, degIdx])
-    if (!playingRef.current) previewChord(chords[degIdx])
+    setProgression(p => [...p, id])
+    if (!playingRef.current) previewChord(byId[id])
   }
-
-  const removeChord = (slotIdx: number) => {
+  const removeChord = (slot: number) => {
     stop()
-    setProgression(p => p.filter((_, i) => i !== slotIdx))
+    setProgression(p => p.filter((_, i) => i !== slot))
     setVoicingIdxMap(m => {
       const next: Record<number, number> = {}
-      Object.entries(m).forEach(([k, v]) => {
-        const ki = parseInt(k)
-        if (ki < slotIdx) next[ki] = v
-        else if (ki > slotIdx) next[ki - 1] = v
-      })
+      Object.entries(m).forEach(([k, v]) => { const ki = +k; if (ki < slot) next[ki] = v; else if (ki > slot) next[ki - 1] = v })
       return next
     })
-    setSelectedSlot(s => {
-      if (s === null) return null
-      if (s === slotIdx) return null
-      return s > slotIdx ? s - 1 : s
-    })
+    setSelectedSlot(s => s === null || s === slot ? null : s > slot ? s - 1 : s)
   }
-
-  const selectSlot = (slotIdx: number) => {
+  const selectSlot = (slot: number) => {
     if (playing) return
     setSelectedSlot(s => {
-      const next = s === slotIdx ? null : slotIdx
-      if (next !== null) previewChord(chords[progression[slotIdx]], voicingIdxMap[slotIdx] ?? 0)
+      const next = s === slot ? null : slot
+      if (next !== null) previewChord(byId[progression[slot]], voicingIdxMap[slot] ?? 0)
       return next
     })
   }
-
-  const applyPreset = (degrees: number[]) => {
-    stop()
-    setProgression(degrees)
-    setSelectedSlot(0)
-    setVoicingIdxMap({})
-    previewChord(chords[degrees[0]])
+  const applyPreset = (ids: string[]) => {
+    stop(); setProgression(ids); setSelectedSlot(0); setVoicingIdxMap({})
+    previewChord(byId[ids[0]])
   }
-
   const reorderSlots = (from: number, to: number) => {
     if (from === to) { setDragIdx(null); setDragOver(null); return }
-    setProgression(prev => {
-      const p = [...prev]; const [m] = p.splice(from, 1); p.splice(to, 0, m); return p
-    })
+    setProgression(prev => { const p = [...prev]; const [m] = p.splice(from, 1); p.splice(to, 0, m); return p })
     setVoicingIdxMap(m => {
       const arr = Array.from({ length: progression.length }, (_, i) => m[i] ?? 0)
       const [mv] = arr.splice(from, 1); arr.splice(to, 0, mv)
@@ -253,497 +202,312 @@ export default function ProgresionesPage() {
       arr.forEach((v, i) => { if (v > 0) next[i] = v })
       return next
     })
-    setSelectedSlot(s => {
-      if (s === null) return null
-      if (s === from) return to
-      if (from < to && s > from && s <= to) return s - 1
-      if (from > to && s >= to && s < from) return s + 1
-      return s
-    })
+    setSelectedSlot(s => s === null ? null : s === from ? to : from < to && s > from && s <= to ? s - 1 : from > to && s >= to && s < from ? s + 1 : s)
     setDragIdx(null); setDragOver(null)
   }
+  // Cambiar de raíz transpone la progresión (los ids son grados, no notas)
+  const changeRoot = (i: number) => { stop(); setRootIdx(i); setVoicingIdxMap({}) }
+  const changeMode = (m: Mode) => { stop(); setMode(m); setProgression([]); setSelectedSlot(null); setVoicingIdxMap({}) }
 
-  // Programa una pasada completa contra el reloj de audio (ancla absoluta) y
-  // encadena la siguiente ~300ms antes de terminar — así el loop no acumula
-  // deriva de setTimeout y el stop puede matar lo que quede en el aire.
-  const schedulePass = (pass: number) => {
-    const cfg = passCfgRef.current
-    if (!cfg || !playingRef.current) return
-    const { prog, chords: snapChords, spb, spc, ring, reps } = cfg
-    const base    = anchorRef.current + pass * prog.length * spc
-    const latency = getVisualLatencyMs()
-
-    prog.forEach((degIdx, step) => {
-      const chord = snapChords[degIdx]
-      const when  = base + step * spc - getAudioTime()
-
-      const stepVoicings = getVoicings(chord.rootIdx, chord.quality)
-      const savedV = voicingMapRef.current[step] ?? 0
-      const safeV  = savedV >= stepVoicings.length ? 0 : savedV
-      if (stepVoicings.length > 0) {
-        scheduleChord(stepVoicings[safeV].frets, when, undefined, ring)
-      } else {
-        playTriad(chord.rootIdx, chord.quality, when, ring)
-      }
-
-      timers.current.push(setTimeout(() => { if (playingRef.current) setActiveStep(step) }, when * 1000 + latency))
-      const nBeats = Math.round(spc / spb)
-      for (let b = 0; b < nBeats; b++) {
-        timers.current.push(
-          setTimeout(() => { if (playingRef.current) setActiveBeat(b) }, (when + b * spb) * 1000 + latency)
-        )
-      }
-    })
-
-    const remaining = base + prog.length * spc - getAudioTime()
-    if (pass + 1 < reps) {
-      timers.current.push(setTimeout(() => schedulePass(pass + 1), Math.max(0, (remaining - 0.3) * 1000)))
-    } else {
-      timers.current.push(setTimeout(() => {
-        playingRef.current = false
-        setPlaying(false); setActiveStep(-1); setActiveBeat(-1)
-      }, (remaining + 0.4) * 1000))
-    }
-  }
-
-  const play = () => {
-    if (playing) { stop(); return }
-    if (progression.length === 0) return
-    setPlaying(true)
-    playingRef.current = true
-    setSelectedSlot(null)
-    timers.current = []
-
-    const secsPerBeat  = 60 / bpm
-    const secsPerChord = secsPerBeat * beats
-    // Cap each chord's ring time to its own slot — otherwise notes (which can
-    // naturally sustain up to 3.5s) pile up unkilled across chord changes and
-    // the summed voices overwhelm the bus, which is heard as distortion/noise.
-    const ringDur = Math.max(0.25, secsPerChord - 0.08)
-
-    passCfgRef.current = { prog: [...progression], chords, spb: secsPerBeat, spc: secsPerChord, ring: ringDur, reps: repeats }
-    anchorRef.current  = getAudioTime() + 0.1
-    schedulePass(0)
-  }
-
+  // Atajos: [espacio] play/stop · [1-7] agrega grado · [⌫] quita el seleccionado
   const playRef = useRef(play)
-  playRef.current = play
-
-  // Atajos: [espacio] play/stop · [1-7] agrega grado · [⌫] quita el slot seleccionado
+  const addRef = useRef(addChord)
+  const removeRef = useRef(removeChord)
+  const selRef = useRef(selectedSlot)
+  const diatonicRef = useRef(diatonic)
+  useEffect(() => {
+    playRef.current = play; addRef.current = addChord; removeRef.current = removeChord
+    selRef.current = selectedSlot; diatonicRef.current = diatonic
+  })
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null
       if (t instanceof HTMLInputElement) return
-      if (e.code === "Space" && !(t instanceof HTMLButtonElement)) {
-        e.preventDefault(); playRef.current()
-      } else if (/^[1-7]$/.test(e.key)) {
-        const chs = getDiatonic(rootIdx, mode)
-        const deg = parseInt(e.key) - 1
-        if (deg < chs.length) addChordRef.current(deg)
-      } else if ((e.key === "Backspace" || e.key === "Delete") && selectedSlotRef.current !== null) {
-        e.preventDefault(); removeChordRef.current(selectedSlotRef.current)
-      }
+      if (e.code === "Space" && !(t instanceof HTMLButtonElement)) { e.preventDefault(); playRef.current() }
+      else if (/^[1-7]$/.test(e.key)) addRef.current(diatonicRef.current[+e.key - 1].id)
+      else if ((e.key === "Backspace" || e.key === "Delete") && selRef.current !== null) { e.preventDefault(); removeRef.current(selRef.current) }
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [rootIdx, mode])
+  }, [])
 
-  const addChordRef = useRef(addChord);           addChordRef.current = addChord
-  const removeChordRef = useRef(removeChord);     removeChordRef.current = removeChord
-  const selectedSlotRef = useRef(selectedSlot);   selectedSlotRef.current = selectedSlot
+  // ─── Lo que suena ahora (para el mapa y el diagrama) ────────────────────────
+  const currentSlot = playing ? activeStep : selectedSlot ?? (progression.length ? 0 : -1)
+  const current = currentSlot >= 0 ? byId[progression[currentSlot]] : null
+  const next = currentSlot >= 0 && progression.length > 1 ? byId[progression[(currentSlot + 1) % progression.length]] : null
+  const voicings = current ? voicingsFor(current) : []
+  const vIdx = currentSlot >= 0 ? Math.min(voicingIdxMap[currentSlot] ?? 0, Math.max(0, voicings.length - 1)) : 0
+  const voicing = voicings[vIdx]
 
-  const playDiagramChord = () => {
-    if (!displayChord || voicings.length === 0) return
-    playChord(voicings[safeVoicing].frets)
+  const challenge = IMPROV_CHALLENGES[challengeIdx]
+  const ks = keyScales(rootIdx, mode)
+  const scale = scaleView === "chord" && current ? current.scale : scaleView === "key" ? ks[1] : ks[0]
+  const emphasis = (focus: ChallengeFocus): number[] | null => {
+    if (!current) return null
+    if (focus === "chord") return current.tones
+    if (focus === "third") return [current.tones[1]]
+    if (focus === "root") return [current.tones[0]]
+    if (focus === "next") return next ? next.tones : current.tones
+    return null
   }
+  const emph = emphasis(challenge.focus)
+  // Las notas resaltadas siempre se dibujan, aunque no estén en la escala elegida (p. ej. un prestado)
+  const mapIntervals = [...new Set([...scale.intervals, ...(emph ?? []).map(t => (t - scale.rootIdx + 12) % 12)])].sort((a, b) => a - b)
+  const toneNames = (c: HarmonyChord) => c.toneNames.join(" · ")
 
-  const changeBpm = (d: number) => setBpm(b => Math.max(30, Math.min(240, b + d)))
-
-  // ─── Styles ──────────────────────────────────────────────────────────────
-
-  const pill = (active: boolean, color?: string): React.CSSProperties => ({
-    padding: "4px 11px",
-    borderRadius: 6,
-    fontSize: 10.5,
-    fontFamily: "var(--font-mono)",
-    letterSpacing: "0.05em",
-    border: active ? `1px solid ${color ?? DEGREE_COLORS[0]}` : "1px solid rgba(255,255,255,0.145)",
-    background: active ? (color ? `${color}18` : alphaOk(DEGREE_COLORS[0], 0.09)) : "rgba(255,255,255,0.06)",
-    color: active ? (color ?? DEGREE_COLORS[0]) : "rgba(255,255,255,0.707)",
-    cursor: "pointer",
-    transition: "all 0.15s",
+  // ─── Estilos ───────────────────────────────────────────────────────────────
+  const pill = (active: boolean): React.CSSProperties => ({
+    padding: "5px 11px", borderRadius: 6, fontSize: 11, fontFamily: "var(--font-mono)", letterSpacing: "0.04em",
+    border: `1px solid ${active ? DEGREE_COLORS[0] : "var(--border-2)"}`,
+    background: active ? "var(--mc-accent-soft)" : "var(--surface-2)",
+    color: active ? DEGREE_COLORS[0] : "var(--text-2)", cursor: "pointer",
+  })
+  const arrowBtn: React.CSSProperties = {
+    width: 26, height: 26, borderRadius: 6, border: "1px solid var(--border-2)", background: "var(--surface-2)",
+    color: "var(--text-1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, cursor: "pointer", flexShrink: 0,
+  }
+  const chordBtn = (c: HarmonyChord, disabled: boolean): React.CSSProperties => ({
+    display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "7px 10px", borderRadius: 8, gap: 1, minWidth: 62,
+    border: `1px solid ${FUNC_COLOR[c.func]}55`, background: `${FUNC_COLOR[c.func]}12`,
+    cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.45 : 1,
   })
 
-  const arrowBtn: React.CSSProperties = {
-    width: 26, height: 26, borderRadius: 5,
-    border: "1px solid rgba(255,255,255,0.145)",
-    background: "rgba(255,255,255,0.06)",
-    color: "rgba(255,255,255,0.8)",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 14, cursor: "pointer", flexShrink: 0,
-  }
-
-  const lbl: React.CSSProperties = {
-    fontSize: 10.5, letterSpacing: "0.14em",
-    color: "rgba(255,255,255,0.483)",
-    fontFamily: "var(--font-mono)",
-  }
-
-  const diagBaseFret = displayVoicing ? baseFretOf(displayVoicing) : 0
-  const diagMain = displayVoicing?.shape ? `FORMA ${displayVoicing.shape}`
-    : displayVoicing?.label ? displayVoicing.label.split(" · ")[0] : ""
-  const diagSub = displayVoicing?.label ? displayVoicing.label.split(" · ")[1]
-    : diagBaseFret <= 1 ? "abierta" : `traste ${diagBaseFret}`
-
-  // ─── Render ──────────────────────────────────────────────────────────────
+  const diagBase = voicing ? baseFretOf(voicing) : 0
+  const diagMain = voicing?.shape ? `FORMA ${voicing.shape}` : voicing?.label ? voicing.label.split(" · ")[0].toUpperCase() : ""
+  const diagSub = voicing?.label?.includes(" · ") ? voicing.label.split(" · ")[1] : diagBase <= 1 ? "abierta" : `traste ${diagBase}`
 
   return (
-    <div className="flex flex-col gap-2">
-
+    <div className="flex flex-col gap-6">
       {/* Hero */}
-      <div style={{ paddingBottom: 6, borderBottom: "1px solid var(--border-1)" }}>
-        <div className="mc-eyebrow">Estudio · Progresiones</div>
-        <h1 className="mc-h1" style={{ fontSize: "clamp(28px, 3vw, 40px)", margin: "2px 0 0" }}>
-          <span style={{ color: DEGREE_COLORS[0] }}>{keyName.split(" ")[0]}</span>
-          <span style={{ color: "rgba(255,255,255,0.95)", fontStyle: "italic" }}>
-            {" "}{keyName.split(" ").slice(1).join(" ")}
-          </span>
-        </h1>
+      <div className="mc-hero">
+        <div>
+          <div className="mc-eyebrow">Estudio · Progresiones</div>
+          <h1 className="mc-h1">
+            <span style={{ color: DEGREE_COLORS[0] }}>{keyTitle(rootIdx, mode).split(" ")[0]}</span>
+            <span style={{ fontStyle: "italic" }}> {keyTitle(rootIdx, mode).split(" ")[1]}</span>
+          </h1>
+          <p className="mc-lede">Arma una progresión, ponle banda y improvisa encima: el mástil te muestra qué notas tocar en cada acorde.</p>
+        </div>
       </div>
 
-      {/* Key + Mode */}
+      {/* Tonalidad */}
       <div className="mc-section" style={{ gap: 8 }}>
-        <div className="mc-section-head" style={{ justifyContent: "flex-start", gap: 12 }}>
+        <div className="mc-section-head" style={{ justifyContent: "flex-start", gap: 12, flexWrap: "wrap" }}>
           <span className="mc-eyebrow">Tonalidad</span>
-          <div className="mc-segmented">
-            {(["major", "minor"] as const).map(m => (
-              <button key={m} onClick={() => handleModeChange(m)} className={mode === m ? "active" : ""}>
-                {m === "major" ? "Mayor" : "Menor"}
-              </button>
-            ))}
+          <div className="mm-seg">
+            {(["major", "minor"] as const).map(m => <button key={m} data-on={mode === m || undefined} onClick={() => changeMode(m)}>{m === "major" ? "Mayor" : "Menor"}</button>)}
           </div>
+          <div className="mm-seg">
+            <button data-on={!sevenths || undefined} onClick={() => setSevenths(false)}>Tríadas</button>
+            <button data-on={sevenths || undefined} onClick={() => setSevenths(true)}>Con 7ª</button>
+          </div>
+          <span className="mc-section-hint">cambiar la raíz transpone la progresión</span>
         </div>
         <div className="mc-note-row">
           {NOTE_NAMES.map((n, i) => {
-            const sharp = NOTE_NAMES[i]
-            const flat  = NOTE_NAMES_FLAT[i]
-            const dual  = sharp !== flat
+            const dual = NOTE_NAMES[i] !== NOTE_NAMES_FLAT[i]
             return (
-              <button key={n} onClick={() => handleRootChange(i)}
-                className={`mc-note-pill ${rootIdx === i ? "active" : ""}`}
-                style={dual ? { display: "flex", flexDirection: "column", alignItems: "center", gap: 0, lineHeight: 1.15, padding: "6px 10px" } : undefined}>
-                {dual ? (
-                  <>
-                    <span style={{ fontSize: 13 }}>{sharp}</span>
-                    <span style={{ fontSize: 10.5, opacity: 0.55, fontFamily: "var(--font-mono)" }}>{flat}</span>
-                  </>
-                ) : sharp}
+              <button key={n} onClick={() => changeRoot(i)} className={`mc-note-pill ${rootIdx === i ? "active" : ""}`}
+                style={dual ? { display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1.15, padding: "6px 10px" } : undefined}>
+                {dual ? (<><span style={{ fontSize: 13 }}>{NOTE_NAMES[i]}</span><span style={{ fontSize: 10.5, opacity: 0.6, fontFamily: "var(--font-mono)" }}>{NOTE_NAMES_FLAT[i]}</span></>) : n}
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Chord Palette */}
-      <div className="mc-section" style={{ gap: 8 }}>
+      {/* Paleta */}
+      <div className="mc-section" style={{ gap: 12 }}>
         <div className="mc-section-head" style={{ justifyContent: "flex-start", gap: 10, flexWrap: "wrap" }}>
-          <span className="mc-eyebrow">Acordes diatónicos</span>
-          <span className="mc-section-hint">click = suena y se agrega · teclas 1–7 · máx 8</span>
+          <span className="mc-eyebrow">Acordes</span>
+          <span className="mc-section-hint">click = suena y se agrega · máx 8</span>
           <div style={{ display: "flex", gap: 10, marginLeft: "auto", flexWrap: "wrap" }}>
             {FUNC_LEGEND.map(f => (
-              <span key={f.label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontFamily: "var(--font-mono)", letterSpacing: "0.08em", color: "rgba(255,255,255,0.584)" }}>
-                <span style={{ width: 7, height: 7, borderRadius: 2, background: f.color, opacity: 0.85 }} />
-                {f.label.toUpperCase()}
+              <span key={f.label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-2)" }}>
+                <span style={{ width: 8, height: 8, borderRadius: 2, background: f.color }} />{f.label}
               </span>
             ))}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {chords.map((chord, i) => {
-            const col = FUNC_COLOR[chord.degree] ?? "rgba(255,255,255,0.74)"
-            return (
-              <button key={i} onClick={() => addChord(i)}
-                disabled={progression.length >= 8}
-                title={`${FUNC_NAME[chord.degree] ?? ""} · tecla ${i + 1}`}
-                style={{
-                  display: "flex", flexDirection: "column", alignItems: "flex-start",
-                  padding: "7px 10px", borderRadius: 8, gap: 1,
-                  border: `1px solid ${col}44`,
-                  background: `${col}0d`,
-                  cursor: progression.length >= 8 ? "not-allowed" : "pointer",
-                  transition: "all 0.15s",
-                  opacity: progression.length >= 8 ? 0.45 : 1,
-                  minWidth: 58,
-                }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, fontWeight: 700,
-                  letterSpacing: "0.1em", color: col }}>{chord.degree}</span>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: 17, fontStyle: "italic",
-                  fontWeight: 600, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-                  {chord.name}
-                </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10,
-                  color: "rgba(255,255,255,0.483)", letterSpacing: "0.08em" }}>
-                  {QUALITY_LABEL[chord.quality]}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        {GROUPS.map(gr => (
+          <div key={gr.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
+              <span style={{ fontSize: 13, color: "var(--text-1)", fontWeight: 600 }}>{gr.label}</span>
+              <span style={{ fontSize: 12, color: "var(--text-3)" }}>{gr.hint}</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {chords.filter(c => c.group === gr.id).map((c, i) => (
+                <button key={c.id} onClick={() => addChord(c.id)} disabled={progression.length >= 8} style={chordBtn(c, progression.length >= 8)}
+                  title={`${c.hint}${gr.id === "diatonic" ? ` · tecla ${i + 1}` : ""}`}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700, color: FUNC_COLOR[c.func] }}>{c.degree}</span>
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontStyle: "italic", color: "#fff", lineHeight: 1.1 }}>{c.name}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-3)" }}>{QUALITY_LABEL[c.quality]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Progression + Diagram panel */}
+      {/* Progresión + diagrama */}
       <div className="mc-section" style={{ gap: 8 }}>
         <div className="mc-section-head" style={{ justifyContent: "flex-start", gap: 10 }}>
           <span className="mc-eyebrow">Progresión</span>
           <span className="mc-section-hint">{progression.length} / 8 · arrastra para reordenar · ⌫ borra</span>
-          {progression.length > 0 && (
-            <button onClick={resetKey}
-              style={{ ...pill(false), padding: "3px 9px", fontSize: 10.5 }}>
-              Limpiar
-            </button>
-          )}
+          {progression.length > 0 && <button onClick={() => { stop(); setProgression([]); setSelectedSlot(null); setVoicingIdxMap({}) }} style={pill(false)}>Limpiar</button>}
         </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(170px, 200px)", gap: 14, alignItems: "stretch" }}>
-
-          {/* Izquierda: slots + presets */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", minHeight: 56 }}>
+        <div className="pg-main">
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", minHeight: 60 }}>
               {progression.length === 0 ? (
-                <div style={{
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  width: "100%", height: 56,
-                  border: "1px dashed rgba(255,255,255,0.145)", borderRadius: 8,
-                  color: "rgba(255,255,255,0.343)", fontSize: 11,
-                  fontFamily: "var(--font-mono)", letterSpacing: "0.1em",
-                }}>
-                  SELECCIONA ACORDES ARRIBA
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: 60, border: "1px dashed var(--border-2)", borderRadius: 8, color: "var(--text-3)", fontSize: 12, fontFamily: "var(--font-mono)" }}>
+                  ELIGE ACORDES ARRIBA O UNA PROGRESIÓN DE EJEMPLO
                 </div>
-              ) : (
-                progression.map((degIdx, slotIdx) => {
-                  const chord    = chords[degIdx]
-                  const col      = FUNC_COLOR[chord.degree] ?? "rgba(255,255,255,0.74)"
-                  const isActive = playing && activeStep === slotIdx
-                  const isSel    = !playing && selectedSlot === slotIdx
-                  return (
-                    <div key={slotIdx}
-                      draggable={!playing}
-                      onClick={() => selectSlot(slotIdx)}
-                      onDragStart={() => setDragIdx(slotIdx)}
-                      onDragOver={e => { e.preventDefault(); setDragOver(slotIdx) }}
-                      onDragLeave={() => setDragOver(null)}
-                      onDrop={e => { e.preventDefault(); if (dragIdx !== null) reorderSlots(dragIdx, slotIdx) }}
-                      onDragEnd={() => { setDragIdx(null); setDragOver(null) }}
-                      style={{
-                        position: "relative",
-                        display: "flex", flexDirection: "column", alignItems: "center",
-                        padding: "8px 10px 6px", borderRadius: 8, minWidth: 54,
-                        border: dragOver === slotIdx && dragIdx !== slotIdx
-                          ? `1.5px dashed ${col}99`
-                          : (isActive || isSel) ? `1.5px solid ${col}` : `1px solid ${col}44`,
-                        background: (isActive || isSel) ? `${col}22` : `${col}0a`,
-                        cursor: playing ? "default" : dragIdx !== null ? "grabbing" : "grab",
-                        transition: "all 0.15s",
-                        filter: isActive ? `drop-shadow(0 0 10px ${col}66)` : undefined,
-                        opacity: dragIdx === slotIdx ? 0.4 : 1,
-                      }}>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700,
-                        letterSpacing: "0.1em", color: col, marginBottom: 2 }}>
-                        {chord.degree}
-                      </span>
-                      <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontStyle: "italic",
-                        fontWeight: 600, color: (isActive || isSel) ? "#fff" : "rgba(255,255,255,0.88)",
-                        letterSpacing: "-0.02em", lineHeight: 1 }}>
-                        {chord.name}
-                      </span>
-                      {isActive && beats > 1 && (
-                        <div style={{ display: "flex", gap: 3, marginTop: 5 }}>
-                          {Array.from({ length: beats }).map((_, b) => (
-                            <div key={b} style={{
-                              width: 4, height: 4, borderRadius: "50%", flexShrink: 0,
-                              background: activeBeat === b ? col : "rgba(255,255,255,0.22)",
-                              transition: "background 0.06s",
-                            }} />
-                          ))}
-                        </div>
-                      )}
-                      <button
-                        onClick={e => { e.stopPropagation(); removeChord(slotIdx) }}
-                        aria-label="Quitar acorde"
-                        style={{
-                          position: "absolute", top: 3, right: 4,
-                          width: 14, height: 14, borderRadius: "50%",
-                          border: "none", background: "transparent",
-                          color: "rgba(255,255,255,0.45)", cursor: "pointer",
-                          fontSize: 11, lineHeight: 1, display: "flex",
-                          alignItems: "center", justifyContent: "center", padding: 0,
-                        }}>×</button>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-
-            {/* Presets */}
-            <div>
-              <span style={{ ...lbl, display: "block", marginBottom: 8 }}>PROGRESIONES POPULARES</span>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {PRESETS[mode].map((preset, i) => (
-                  <button key={i} onClick={() => applyPreset(preset.degrees)}
+              ) : progression.map((id, slot) => {
+                const c = byId[id]
+                if (!c) return null
+                const col = FUNC_COLOR[c.func]
+                const on = playing ? activeStep === slot : selectedSlot === slot
+                return (
+                  <div key={slot} draggable={!playing} onClick={() => selectSlot(slot)}
+                    onDragStart={() => setDragIdx(slot)} onDragOver={e => { e.preventDefault(); setDragOver(slot) }}
+                    onDragLeave={() => setDragOver(null)} onDrop={e => { e.preventDefault(); if (dragIdx !== null) reorderSlots(dragIdx, slot) }}
+                    onDragEnd={() => { setDragIdx(null); setDragOver(null) }}
+                    className="pg-slot"
                     style={{
-                      ...pill(false), fontSize: 11,
-                      display: "flex", flexDirection: "column", alignItems: "flex-start",
-                      gap: 2, padding: "6px 11px",
+                      border: dragOver === slot && dragIdx !== slot ? `1.5px dashed ${col}` : on ? `1.5px solid ${col}` : `1px solid ${col}55`,
+                      background: on ? `${col}26` : `${col}0e`, opacity: dragIdx === slot ? 0.4 : 1,
+                      filter: playing && on ? `drop-shadow(0 0 10px ${col}66)` : undefined, cursor: playing ? "default" : "grab",
                     }}>
-                    <span>{preset.label}</span>
-                    <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.56)", letterSpacing: "0.03em" }}>
-                      {preset.degrees.map(d => chords[d].name).join(" · ")}
-                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, fontWeight: 700, color: col }}>{c.degree}</span>
+                    <span style={{ fontFamily: "var(--font-display)", fontSize: 19, fontStyle: "italic", color: "#fff", lineHeight: 1 }}>{c.name}</span>
+                    {playing && on && beats > 1 && (
+                      <div style={{ display: "flex", gap: 3, marginTop: 4 }}>
+                        {Array.from({ length: beats }).map((_, b) => <span key={b} style={{ width: 4, height: 4, borderRadius: 2, background: activeBeat === b ? col : "var(--border-3)" }} />)}
+                      </div>
+                    )}
+                    <button onClick={e => { e.stopPropagation(); removeChord(slot) }} aria-label="Quitar acorde" className="pg-x">×</button>
+                  </div>
+                )
+              })}
+            </div>
+            <div>
+              <span className="mc-eyebrow" style={{ display: "block", marginBottom: 8 }}>Progresiones de ejemplo</span>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {PROGRESSION_PRESETS[mode].map(p => (
+                  <button key={p.label} onClick={() => applyPreset(p.ids)} className="pg-preset">
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--text-1)" }}>{p.label}</span>
+                    <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>{p.ids.map(id => byId[id]?.name).join(" · ")}</span>
+                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>{p.style}</span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* Derecha: diagrama del acorde seleccionado / sonando */}
-          <div style={{
-            border: "1px solid rgba(255,255,255,0.105)",
-            borderRadius: 10,
-            background: "rgba(255,255,255,0.048)",
-            display: "flex", flexDirection: "column", alignItems: "center",
-            justifyContent: "center",
-            padding: "12px 8px 10px",
-            minHeight: 200,
-          }}>
-            {displayChord && voicings.length > 0 ? (
+          <div className="pg-diagram">
+            {current && voicing ? (
               <>
-                <ChordDiagram
-                  voicing={displayVoicing}
-                  name={displayChord.name}
-                  size="sm"
-                  onPlay={playDiagramChord}
-                />
+                <ChordDiagram voicing={voicing} name={current.name} size="sm" hideLevel onPlay={() => playChord(voicing.frets)} />
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                  <button
-                    onClick={() => displaySlot !== null && setVoicingIdxMap(m => ({ ...m, [displaySlot]: (safeVoicing - 1 + voicings.length) % voicings.length }))}
-                    title="Voicing anterior (se usa al reproducir)"
-                    style={{ ...arrowBtn, width: 22, height: 22, fontSize: 12 }}>‹</button>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 74 }}>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, fontWeight: 700, color: DEGREE_COLORS[0], letterSpacing: "0.07em" }}>
-                      {diagMain}
-                    </span>
-                    <span style={{ ...lbl, fontSize: 10, color: "rgba(255,255,255,0.56)" }}>
-                      {diagSub} · {safeVoicing + 1}/{voicings.length}
-                    </span>
+                  <button onClick={() => currentSlot >= 0 && setVoicingIdxMap(m => ({ ...m, [currentSlot]: (vIdx - 1 + voicings.length) % voicings.length }))} style={{ ...arrowBtn, width: 22, height: 22 }} title="Voicing anterior">‹</button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 76 }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, fontWeight: 700, color: DEGREE_COLORS[0] }}>{diagMain}</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--text-3)" }}>{diagSub} · {vIdx + 1}/{voicings.length}</span>
                   </div>
-                  <button
-                    onClick={() => displaySlot !== null && setVoicingIdxMap(m => ({ ...m, [displaySlot]: (safeVoicing + 1) % voicings.length }))}
-                    title="Voicing siguiente (se usa al reproducir)"
-                    style={{ ...arrowBtn, width: 22, height: 22, fontSize: 12 }}>›</button>
+                  <button onClick={() => currentSlot >= 0 && setVoicingIdxMap(m => ({ ...m, [currentSlot]: (vIdx + 1) % voicings.length }))} style={{ ...arrowBtn, width: 22, height: 22 }} title="Voicing siguiente">›</button>
                 </div>
               </>
-            ) : displayChord && voicings.length === 0 ? (
-              <div style={{
-                flex: 1, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center", gap: 8, padding: 8,
-              }}>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontStyle: "italic",
-                  color: "rgba(255,255,255,0.74)" }}>{displayChord.name}</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5,
-                  color: "rgba(255,255,255,0.343)", textAlign: "center", letterSpacing: "0.08em" }}>
-                  SIN DIAGRAMA
-                </span>
-              </div>
             ) : (
-              <div style={{
-                flex: 1, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center", gap: 6,
-              }}>
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" opacity={0.2}>
-                  <rect x="4" y="8" width="6" height="12" rx="1.5" stroke="white" strokeWidth="1.4"/>
-                  <rect x="11" y="8" width="6" height="12" rx="1.5" stroke="white" strokeWidth="1.4"/>
-                  <rect x="18" y="8" width="6" height="12" rx="1.5" stroke="white" strokeWidth="1.4"/>
-                </svg>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textAlign: "center",
-                  color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", lineHeight: 1.5 }}>
-                  CLICK EN UN ACORDE<br/>DE LA PROGRESIÓN
-                </span>
-              </div>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-3)", textAlign: "center" }}>CLICK EN UN ACORDE<br />DE LA PROGRESIÓN</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Playback */}
-      <div className="mc-section" style={{ paddingBottom: 8 }}>
+      {/* Base: estilo, banda y reproducción */}
+      <div className="mc-section" style={{ gap: 10 }}>
         <div className="mc-section-head" style={{ justifyContent: "flex-start", gap: 10 }}>
-          <span className="mc-eyebrow">Reproducción</span>
+          <span className="mc-eyebrow">Base</span>
           <span className="mc-section-hint">[espacio] = play / stop</span>
         </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {FEELS.map(f => <button key={f.id} onClick={() => { setFeelId(f.id); if (playing) stop() }} style={pill(feelId === f.id)}>{f.label}</button>)}
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        {/* BPM */}
-        <button onClick={() => changeBpm(-5)} style={arrowBtn}>−</button>
-        <input type="range" min={30} max={240} value={bpm}
-          onChange={e => setBpm(+e.target.value)} className="mc-slider"
-          style={{ flex: 1, minWidth: 110, maxWidth: 260 }}/>
-        <button onClick={() => changeBpm(5)} style={arrowBtn}>+</button>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 2, minWidth: 44 }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 16,
-            color: "#fff", lineHeight: 1 }}>{bpm}</span>
-          <span style={{ ...lbl, fontSize: 10 }}>BPM</span>
+          <button onClick={() => setBpm(b => Math.max(40, b - 5))} style={arrowBtn}>−</button>
+          <input type="range" min={40} max={200} value={bpm} onChange={e => setBpm(+e.target.value)} className="mc-slider" style={{ flex: 1, minWidth: 110, maxWidth: 240 }} />
+          <button onClick={() => setBpm(b => Math.min(200, b + 5))} style={arrowBtn}>+</button>
+          <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 16, color: "#fff", minWidth: 64 }}>{bpm} <span style={{ fontSize: 11, color: "var(--text-3)" }}>BPM</span></span>
+          <span className="mc-eyebrow">Pulsos por acorde</span>
+          <div style={{ display: "flex", gap: 3 }}>{[1, 2, 4, 8].map(b => <button key={b} onClick={() => { setBeats(b); if (playing) stop() }} style={pill(beats === b)}>{b}</button>)}</div>
+          <span className="mc-eyebrow">Vueltas</span>
+          <div style={{ display: "flex", gap: 3 }}>{[1, 2, 4, Infinity].map(r => <button key={r} onClick={() => setRepeats(r)} style={pill(repeats === r)}>{r === Infinity ? "∞" : `${r}×`}</button>)}</div>
         </div>
-
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.145)", flexShrink: 0 }} />
-
-        {/* Beats */}
-        <span style={{ ...lbl, fontSize: 10 }}>PULSOS</span>
-        <div style={{ display: "flex", gap: 3 }}>
-          {[1, 2, 4].map(b => (
-            <button key={b} onClick={() => setBeats(b)}
-              style={{ ...pill(beats === b), padding: "4px 10px" }}>{b}</button>
-          ))}
-        </div>
-
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.145)", flexShrink: 0 }} />
-
-        {/* Repeats */}
-        <span style={{ ...lbl, fontSize: 10 }}>REPS</span>
-        <div style={{ display: "flex", gap: 3 }}>
-          {[1, 2, 4, Infinity].map(r => (
-            <button key={r} onClick={() => setRepeats(r)}
-              title={r === Infinity ? "Loop hasta que pares" : undefined}
-              style={{ ...pill(repeats === r), padding: "4px 10px" }}>
-              {r === Infinity ? "∞" : `${r}×`}
-            </button>
-          ))}
-        </div>
-
-          <button onClick={play} disabled={progression.length === 0} style={{
-            marginLeft: "auto",
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "9px 20px", borderRadius: 999,
-            fontSize: 13, fontWeight: 600,
-            cursor: progression.length === 0 ? "not-allowed" : "pointer",
-            border: playing ? "1px solid rgba(255,80,80,0.4)" : "1px solid transparent",
-            background: playing ? "rgba(255,80,80,0.12)" : DEGREE_COLORS[0],
-            color: playing ? "#ff6060" : "#0a0a08",
-            opacity: progression.length === 0 ? 0.4 : 1,
-            transition: "all 0.15s",
-          }}>
-            {playing ? (
-              <><svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                <rect x="1" y="1" width="3" height="8" fill="currentColor"/>
-                <rect x="6" y="1" width="3" height="8" fill="currentColor"/>
-              </svg>Stop</>
-            ) : (
-              <><svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                <path d="M2 1L9 5 2 9Z" fill="currentColor"/>
-              </svg>{repeats === Infinity ? "Loop" : "Reproducir"}</>
-            )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <button onClick={() => setBandOn(v => !v)} style={pill(bandOn)}>🥁 Banda {bandOn ? "ON" : "OFF"}</button>
+          {bandOn && <input type="range" min={0} max={1.2} step={0.05} value={bandVol} onChange={e => setBandVol(+e.target.value)} className="mc-slider" style={{ width: 110, flex: "none" }} aria-label="Volumen de la banda" />}
+          <button onClick={play} disabled={progression.length === 0} className="mc-play-btn" style={{ marginLeft: "auto", opacity: progression.length === 0 ? 0.4 : 1, ...(playing ? { background: "oklch(0.68 0.18 25 / 0.15)", color: "oklch(0.78 0.17 25)", border: "1px solid oklch(0.68 0.18 25 / 0.5)" } : {}) }}>
+            {playing ? "◼ Parar" : repeats === Infinity ? "▶ Tocar en loop" : "▶ Tocar"}
           </button>
         </div>
       </div>
 
+      {/* Improvisar */}
+      <div className="pg-improv">
+        <div className="pg-now">
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
+            <div style={{ minWidth: 180 }}>
+              <span className="mc-eyebrow">{playing ? "Suena ahora" : "Acorde"}</span>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 30, color: "#fff", lineHeight: 1.1 }}>{current?.name ?? "—"}</div>
+              {current && <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: DEGREE_COLORS[0] }}>{toneNames(current)}</div>}
+            </div>
+            {next && (
+              <div style={{ minWidth: 140 }}>
+                <span className="mc-eyebrow">Siguiente</span>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--text-2)", lineHeight: 1.2 }}>{next.name}</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-3)" }}>{toneNames(next)}</div>
+              </div>
+            )}
+            {current && (
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <span className="mc-eyebrow">Escala para este acorde</span>
+                <div style={{ fontSize: 14, color: "var(--text-1)", marginTop: 2 }}>{current.scale.name}</div>
+                <div style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.45 }}>{current.hint}</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <span className="mc-eyebrow">Mapa</span>
+          <div className="mm-seg">
+            <button data-on={scaleView === "pent" || undefined} onClick={() => setScaleView("pent")}>Pentatónica</button>
+            <button data-on={scaleView === "key" || undefined} onClick={() => setScaleView("key")}>Escala completa</button>
+            <button data-on={scaleView === "chord" || undefined} onClick={() => setScaleView("chord")}>Escala del acorde</button>
+          </div>
+          <div className="mm-seg">
+            <button data-on={labels === "notes" || undefined} onClick={() => setLabels("notes")}>Notas</button>
+            <button data-on={labels === "intervals" || undefined} onClick={() => setLabels("intervals")}>Intervalos</button>
+          </div>
+          <span style={{ fontSize: 12.5, color: "var(--text-2)" }}>{scale.name}{emph ? " · con aro blanco: las notas del reto" : ""}</span>
+        </div>
+        <Fretboard rootIdx={scale.rootIdx} intervals={mapIntervals} displayMode={labels}
+          emphasizeNotes={emph ? new Set(emph) : null} />
+
+        <div className="pg-challenge">
+          <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+            <span className="mc-eyebrow" style={{ color: DEGREE_COLORS[0] }}>Reto {challengeIdx + 1}/{IMPROV_CHALLENGES.length}</span>
+            <span style={{ fontFamily: "var(--font-display)", fontSize: 21, color: "#fff" }}>{challenge.title}</span>
+            <span style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+              <button className="mc-btn-ghost" onClick={() => setChallengeIdx(i => (i - 1 + IMPROV_CHALLENGES.length) % IMPROV_CHALLENGES.length)}>‹</button>
+              <button className="mc-btn-ghost" onClick={() => setChallengeIdx(i => (i + 1) % IMPROV_CHALLENGES.length)}>Otro reto ›</button>
+            </span>
+          </div>
+          <p style={{ margin: 0, fontSize: 14.5, color: "var(--text-1)", lineHeight: 1.55 }}>{challenge.how}</p>
+          <p style={{ margin: 0, fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.5 }}>{challenge.tip}</p>
+          {progression.length === 0 && <p style={{ margin: 0, fontSize: 12.5, color: "var(--text-3)" }}>Elige una progresión de ejemplo y dale a «Tocar en loop» para empezar.</p>}
+        </div>
+      </div>
     </div>
   )
 }

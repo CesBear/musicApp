@@ -154,6 +154,9 @@ export function bassRoot(chord: string | number): number {
   return 28 + ((pc - 4 + 12) % 12)
 }
 
+/** Fundamental en el registro del bajo (Mi1–Re#2) a partir de la clase de altura (0 = Do). */
+export const bassFromPc = (pc: number) => 28 + ((pc - 4 + 12) % 12)
+
 /**
  * Agenda la banda para un paso del patrón: todo golpe del groove que caiga en
  * [pos, pos + stepBeats) suena con su offset dentro del paso.

@@ -16,6 +16,7 @@ interface FretboardProps {
   focusMode?:      boolean
   highlightNotes?: Set<number> | null
   activeStrings?:  Set<number> | null   // triad string-set filter (indices 0-5, low E=0)
+  emphasizeNotes?: Set<number> | null   // notas objetivo: se resaltan y el resto de la escala queda tenue
   onNoteClick?:    (n: { semi: number; fret: number; string: number; midi: number }) => void
 }
 
@@ -26,6 +27,7 @@ export default function Fretboard({
   focusMode = false,
   highlightNotes = null,
   activeStrings = null,
+  emphasizeNotes = null,
   onNoteClick,
 }: FretboardProps) {
   const R = 13.5
@@ -62,6 +64,8 @@ export default function Fretboard({
             else if (focusMode && !inPos) opacity = 0
             else if (!inPos) opacity = 0.14
             if (highlightNotes && !inChord) opacity = Math.min(opacity, 0.08)
+            const emphasized = !!emphasizeNotes?.has(norm)
+            if (emphasizeNotes && !emphasized) opacity = Math.min(opacity, 0.32)
             if (opacity === 0) return null
 
             const x = noteX(fret)
@@ -82,6 +86,7 @@ export default function Fretboard({
                     stroke={DEGREE_COLORS[0]} strokeWidth={1.2} opacity={0.55} />
                 )}
                 <circle cx={x} cy={y} r={r} fill={color} filter={`url(#${noteShadow})`} />
+                {emphasized && <circle cx={x} cy={y} r={r + 2.5} fill="none" stroke="#fff" strokeWidth={2} opacity={0.9} />}
                 <text x={x} y={y + 0.5} textAnchor="middle" dominantBaseline="middle"
                   fontSize={label.length > 1 ? 9.5 : 11}
                   fontWeight="700" fill="#0c0a08"
