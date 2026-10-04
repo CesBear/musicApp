@@ -1469,3 +1469,29 @@ body::before {
   padding: 20px 22px; border-radius: 14px; background: var(--surface-1); border: 1px solid var(--border-1);
 }
 @media (max-width: 800px) { .mm-principles { grid-template-columns: 1fr; } }
+
+/* ─── Rasgueos · guía y teoría (rz-*) ──────────────────────────── */
+.rz-guide { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+@media (max-width: 800px) { .rz-guide { grid-template-columns: 1fr; } }
+.rz-genre, .rz-lesson {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px 18px; border-radius: 14px;
+  background: var(--surface-1); border: 1px solid var(--border-1);
+}
+.rz-facts { display: grid; grid-template-columns: 84px 1fr; gap: 5px 10px; margin: 0; }
+.rz-facts dt {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3); padding-top: 2px;
+}
+.rz-facts dd { margin: 0; font-size: 13.5px; color: var(--text-1); line-height: 1.45; }
+.rz-chip {
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  font-size: 12.5px; color: oklch(0.82 0.13 40);
+  background: oklch(0.80 0.14 40 / 0.1); border: 1px solid oklch(0.80 0.14 40 / 0.35);
+  transition: background 0.15s;
+}
+.rz-chip:hover { background: oklch(0.80 0.14 40 / 0.2); }
+.rz-count {
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--text-2);
+  padding: 9px 12px; border-radius: 8px; background: var(--bg-1); border: 1px solid var(--border-1);
+}
