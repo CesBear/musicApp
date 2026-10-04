@@ -16,7 +16,8 @@ import type { ChordVoicing } from "@/data/chords"
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
-const FUNC_COLOR: Record<HarmonyChord["func"], string> = { T: "#c89535", S: "#4a7fc4", D: "#c4503a", color: "#8b5ba8" }
+// Función armónica: tónica verde (reposo), subdominante amarillo (movimiento), dominante rojo (tensión), color morado
+const FUNC_COLOR: Record<HarmonyChord["func"], string> = { T: "#5bb06f", S: "#d9b43a", D: "#d0533c", color: "#9a68b8" }
 const FUNC_LEGEND = [
   { label: "tónica", color: FUNC_COLOR.T }, { label: "subdominante", color: FUNC_COLOR.S },
   { label: "dominante", color: FUNC_COLOR.D }, { label: "color", color: FUNC_COLOR.color },
