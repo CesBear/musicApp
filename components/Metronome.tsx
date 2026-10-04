@@ -19,13 +19,13 @@ const SOUNDS: { id: ClickSound; label: string }[] = [
 
 const ACCENT_COLOR: Record<AccentLevel, string> = {
   2: DEGREE_COLORS[0],
-  1: "rgba(255,255,255,0.55)",
-  0: "rgba(255,255,255,0.10)",
+  1: "rgba(255,255,255,0.707)",
+  0: "rgba(255,255,255,0.145)",
 }
 const ACCENT_BORDER: Record<AccentLevel, string> = {
   2: `${DEGREE_COLORS[0]}80`,
-  1: "rgba(255,255,255,0.15)",
-  0: "rgba(255,255,255,0.06)",
+  1: "rgba(255,255,255,0.22)",
+  0: "rgba(255,255,255,0.09)",
 }
 const ACCENT_LABEL: Record<AccentLevel, string> = {
   2: "Acento", 1: "Normal", 0: "Mute",
@@ -130,9 +130,9 @@ export default function Metronome() {
     fontSize: 10.5,
     fontFamily: "var(--font-mono)",
     letterSpacing: "0.06em",
-    border: active ? `1px solid ${DEGREE_COLORS[0]}` : "1px solid rgba(255,255,255,0.1)",
-    background: active ? `${DEGREE_COLORS[0]}18` : "rgba(255,255,255,0.04)",
-    color: active ? DEGREE_COLORS[0] : "rgba(255,255,255,0.55)",
+    border: active ? `1px solid ${DEGREE_COLORS[0]}` : "1px solid rgba(255,255,255,0.145)",
+    background: active ? `${DEGREE_COLORS[0]}18` : "rgba(255,255,255,0.06)",
+    color: active ? DEGREE_COLORS[0] : "rgba(255,255,255,0.707)",
     cursor: "pointer",
     transition: "all 0.12s",
   })
@@ -140,17 +140,17 @@ export default function Metronome() {
   const arrowBtn: React.CSSProperties = {
     width: 24, height: 24,
     borderRadius: 5,
-    border: "1px solid rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.04)",
-    color: "rgba(255,255,255,0.7)",
+    border: "1px solid rgba(255,255,255,0.145)",
+    background: "rgba(255,255,255,0.06)",
+    color: "rgba(255,255,255,0.8)",
     display: "flex", alignItems: "center", justifyContent: "center",
     fontSize: 13, cursor: "pointer",
     transition: "background 0.12s",
   }
 
   const lbl: React.CSSProperties = {
-    fontSize: 9, letterSpacing: "0.14em",
-    color: "rgba(255,255,255,0.28)",
+    fontSize: 10.5, letterSpacing: "0.14em",
+    color: "rgba(255,255,255,0.483)",
     fontFamily: "var(--font-mono)",
   }
 
@@ -183,9 +183,9 @@ export default function Metronome() {
         <button onClick={() => changeBpm(1)} style={arrowBtn}>+</button>
         <div style={{ display: "flex", alignItems: "baseline", gap: 3, minWidth: 54 }}>
           <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 22, color: "#fff", lineHeight: 1 }}>{bpm}</span>
-          <span style={{ ...lbl, fontSize: 8 }}>BPM</span>
+          <span style={{ ...lbl, fontSize: 10 }}>BPM</span>
         </div>
-        <button onClick={handleTap} style={{ ...pill(false), padding: "3px 8px", fontSize: 9.5 }}>TAP</button>
+        <button onClick={handleTap} style={{ ...pill(false), padding: "3px 8px", fontSize: 10.5 }}>TAP</button>
       </div>
 
       {/* Row 3: Compás + Subdivisión on same line */}
@@ -195,12 +195,12 @@ export default function Metronome() {
           <button onClick={() => setNumerator(n => Math.max(1, n - 1))} style={arrowBtn}>‹</button>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 16, fontWeight: 700, color: "#fff", minWidth: 20, textAlign: "center" }}>{numerator}</span>
           <button onClick={() => setNumerator(n => Math.min(16, n + 1))} style={arrowBtn}>›</button>
-          <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 14, margin: "0 1px" }}>/</span>
+          <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, margin: "0 1px" }}>/</span>
           <button onClick={() => setDenIdx(i => Math.max(0, i - 1))} style={arrowBtn}>‹</button>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 16, fontWeight: 700, color: "#fff", minWidth: 20, textAlign: "center" }}>{denominator}</span>
           <button onClick={() => setDenIdx(i => Math.min(DENOMINATORS.length - 1, i + 1))} style={arrowBtn}>›</button>
         </div>
-        <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>·</span>
+        <span style={{ color: "rgba(255,255,255,0.22)", fontSize: 11 }}>·</span>
         <div style={{ display: "flex", gap: 3 }}>
           <button onClick={() => setSubdiv("none")} style={{ ...pill(subdiv === "none"), padding: "3px 7px", fontSize: 12 }}>♩</button>
           <button onClick={() => setSubdiv("8th")}  style={{ ...pill(subdiv === "8th"),  padding: "3px 7px", fontSize: 12 }}>♩♪</button>
@@ -212,7 +212,7 @@ export default function Metronome() {
         <span style={lbl}>SONIDO</span>
         <div style={{ display: "flex", gap: 3 }}>
           {SOUNDS.map(s => (
-            <button key={s.id} onClick={() => setSound(s.id)} style={{ ...pill(sound === s.id), padding: "3px 8px", fontSize: 10 }}>{s.label}</button>
+            <button key={s.id} onClick={() => setSound(s.id)} style={{ ...pill(sound === s.id), padding: "3px 8px", fontSize: 11 }}>{s.label}</button>
           ))}
         </div>
       </div>
@@ -229,10 +229,10 @@ export default function Metronome() {
                 border: isActive ? `1.5px solid ${DEGREE_COLORS[0]}` : `1px solid ${ACCENT_BORDER[accent]}`,
                 background: isActive ? DEGREE_COLORS[0]
                   : accent === 2 ? `${DEGREE_COLORS[0]}20`
-                  : accent === 1 ? "rgba(255,255,255,0.06)"
-                  : "rgba(255,255,255,0.02)",
+                  : accent === 1 ? "rgba(255,255,255,0.09)"
+                  : "rgba(255,255,255,0.035)",
                 color: isActive ? "#0a0a08" : ACCENT_COLOR[accent],
-                fontSize: 9, fontFamily: "var(--font-mono)",
+                fontSize: 10.5, fontFamily: "var(--font-mono)",
                 fontWeight: isActive || accent === 2 ? 700 : 400,
                 cursor: "pointer",
                 transition: "background 0.06s, border 0.06s, color 0.06s",

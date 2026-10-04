@@ -88,8 +88,8 @@ export default function ChordBuilderPage() {
 
   const arrowStyle: React.CSSProperties = {
     width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-    border: "1px solid rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.75)",
+    border: "1px solid rgba(255,255,255,0.145)",
+    background: "rgba(255,255,255,0.075)", color: "rgba(255,255,255,0.83)",
     fontSize: 18, cursor: "pointer",
     display: "flex", alignItems: "center", justifyContent: "center",
     transition: "background 0.12s",
@@ -111,7 +111,7 @@ export default function ChordBuilderPage() {
             <span className="mc-meta-sep">·</span>
             <span className="mc-meta-text">{voicing?.barre ? `Cejilla en traste ${voicing.barre.fret}` : "Sin cejilla"}</span>
             <span className="mc-meta-sep">·</span>
-            <span className="mc-meta-text" style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>← → cambia posición · click en cuerda para oírla</span>
+            <span className="mc-meta-text" style={{ color: "rgba(255,255,255,0.56)", fontSize: 12 }}>← → cambia posición · click en cuerda para oírla</span>
           </div>
         </div>
         <button className="mc-play-btn" onClick={handleStrum}>
@@ -137,19 +137,19 @@ export default function ChordBuilderPage() {
           <div style={{ display: "flex", alignItems: "stretch", gap: 6, flexWrap: "wrap" }}>
             {GROUPS.map((group, gi) => (
               <Fragment key={group}>
-                {gi > 0 && <span style={{ width: 1, background: "rgba(255,255,255,0.08)", margin: "4px 4px" }} />}
+                {gi > 0 && <span style={{ width: 1, background: "rgba(255,255,255,0.12)", margin: "4px 4px" }} />}
                 {CHORD_TYPES.filter(ct => ct.group === group).map(ct => {
                   const active = type === ct.type
                   return (
                     <button key={ct.type} onClick={() => setType(ct.type)} title={ct.description} style={{
                       display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1,
                       padding: "6px 12px", borderRadius: 9, cursor: "pointer", textAlign: "left",
-                      border: `1px solid ${active ? alpha(ACCENT, 0.5) : "rgba(255,255,255,0.09)"}`,
-                      background: active ? alpha(ACCENT, 0.12) : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${active ? alpha(ACCENT, 0.5) : "rgba(255,255,255,0.132)"}`,
+                      background: active ? alpha(ACCENT, 0.12) : "rgba(255,255,255,0.048)",
                       transition: "all 0.13s",
                     }}>
                       <span style={{ fontSize: 12.5, fontWeight: 600, color: active ? ACCENT : "rgba(255,255,255,0.85)" }}>{ct.label}</span>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "rgba(255,255,255,0.32)", letterSpacing: "0.02em" }}>{ct.description}</span>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "rgba(255,255,255,0.527)", letterSpacing: "0.02em" }}>{ct.description}</span>
                     </button>
                   )
                 })}
@@ -172,7 +172,7 @@ export default function ChordBuilderPage() {
                   <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 12.5, color: ACCENT, letterSpacing: "0.06em" }}>
                     {mainLabel}
                   </span>
-                  <span style={{ fontSize: 9.5, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
+                  <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
                     {subLabel}
                   </span>
                 </div>
@@ -193,12 +193,12 @@ export default function ChordBuilderPage() {
                         width: isMain ? 9 : 7, height: isMain ? 9 : 7, borderRadius: "50%",
                         padding: 0, cursor: "pointer",
                         border: "none",
-                        background: sel ? ACCENT : isMain ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.14)",
+                        background: sel ? ACCENT : isMain ? "rgba(255,255,255,0.56)" : "rgba(255,255,255,0.203)",
                         transition: "background 0.12s",
                       }} />
                   )
                 })}
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "rgba(255,255,255,0.3)", marginLeft: 6, letterSpacing: "0.05em" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "rgba(255,255,255,0.505)", marginLeft: 6, letterSpacing: "0.05em" }}>
                   {posIdx + 1}/{voicings.length}
                 </span>
               </div>
@@ -220,7 +220,7 @@ export default function ChordBuilderPage() {
                        style={i === 0 ? { background: ACCENT } : {}}>
                     {n.note}
                   </div>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: i === 0 ? ACCENT : "rgba(255,255,255,0.4)", letterSpacing: "0.06em" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: i === 0 ? ACCENT : "rgba(255,255,255,0.6)", letterSpacing: "0.06em" }}>
                     {n.degree}
                   </span>
                 </div>

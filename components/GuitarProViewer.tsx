@@ -128,22 +128,22 @@ export default function GuitarProViewer({ file, onClear }: Props) {
       <div style={{
         display: "flex", alignItems: "center", gap: 12,
         padding: "12px 16px",
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.12)",
         borderRadius: 10,
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           {loaded ? (
             <>
               <span style={{ fontSize: 13, color: "#fff", fontWeight: 500 }}>{title || file.name}</span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginLeft: 10, fontFamily: "var(--font-mono)" }}>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.56)", marginLeft: 10, fontFamily: "var(--font-mono)" }}>
                 {trackCount} {trackCount === 1 ? "pista" : "pistas"}
               </span>
             </>
           ) : error ? (
             <span style={{ fontSize: 12, color: "#ff6060" }}>{error}</span>
           ) : (
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-mono)" }}>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-mono)" }}>
               Procesando {file.name}…
             </span>
           )}
@@ -154,13 +154,13 @@ export default function GuitarProViewer({ file, onClear }: Props) {
       </div>
 
       {/* Notation */}
-      <div style={{ background: "#fff", borderRadius: 10, overflow: "auto", minHeight: 200, border: "1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ background: "#fff", borderRadius: 10, overflow: "auto", minHeight: 200, border: "1px solid rgba(255,255,255,0.09)" }}>
         <div ref={containerRef} />
       </div>
 
       <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
         {[["Formatos", ".gp3 · .gp4 · .gp5 · .gpx · .gp"], ["Privacidad", "Procesado local — no se sube nada"]].map(([label, val]) => (
-          <span key={label} style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+          <span key={label} style={{ fontSize: 11, color: "rgba(255,255,255,0.505)" }}>
             <span style={{ color: DEGREE_COLORS[0], marginRight: 6, fontFamily: "var(--font-mono)" }}>{label}</span>{val}
           </span>
         ))}

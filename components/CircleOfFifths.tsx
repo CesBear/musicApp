@@ -94,12 +94,12 @@ export default function CircleOfFifths({ selected, onSelect }: Props) {
     <svg width="600" height="600" viewBox="0 0 600 600" style={{ maxWidth: "100%", display: "block" }}>
       <defs>
         <radialGradient id="cofCenter" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0%"   stopColor="rgba(255,255,255,0.04)"/>
+          <stop offset="0%"   stopColor="rgba(255,255,255,0.06)"/>
           <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
         </radialGradient>
         <radialGradient id="cofRim" cx="0.5" cy="0.5" r="0.5">
           <stop offset="85%"  stopColor="rgba(255,255,255,0)"/>
-          <stop offset="100%" stopColor="rgba(255,255,255,0.06)"/>
+          <stop offset="100%" stopColor="rgba(255,255,255,0.09)"/>
         </radialGradient>
         <style>{`
           @keyframes cofBadge { from { opacity:0 } to { opacity:1 } }
@@ -163,8 +163,8 @@ export default function CircleOfFifths({ selected, onSelect }: Props) {
 
         const groupOpacity = !hasSelection   ? 1
           : (isSelMajor || isSelMinor || isNearFocus) ? 1
-          : isDimFocus   ? 0.52
-          : 0.18
+          : isDimFocus   ? 0.65
+          : 0.38
 
         const outerDegPt = polar(207, angle)
         const innerDegPt = polar(171, angle)
@@ -175,14 +175,14 @@ export default function CircleOfFifths({ selected, onSelect }: Props) {
         return (
           <g key={note.major} style={{
             opacity:    groupOpacity,
-            filter:     hasSelection && !isFocused ? "blur(0.9px)" : undefined,
+            filter:     hasSelection && !isFocused ? "blur(0.4px)" : undefined,
             transition: "opacity 0.25s ease, filter 0.25s ease",
           }}>
             {/* Outer / major arc */}
             <path
               d={arcPath(midR + 4, outerR, startMajor, endMajor)}
               fill={outerFill}
-              stroke={isSelMajor || isNearFocus ? outerFill : "rgba(255,255,255,0.04)"}
+              stroke={isSelMajor || isNearFocus ? outerFill : "rgba(255,255,255,0.06)"}
               strokeWidth={isSelMajor || isNearFocus ? 0 : 0.5}
               style={{ cursor: "pointer", transition: "fill 0.22s ease, filter 0.25s ease", filter: outerFilter }}
               onMouseEnter={() => setHovered({ idx, kind: "major" })}
@@ -197,7 +197,7 @@ export default function CircleOfFifths({ selected, onSelect }: Props) {
             </text>
             <text x={sharpsLabel.x} y={sharpsLabel.y} textAnchor="middle" dominantBaseline="middle"
               fontSize={9} fontWeight="600"
-              fill={isSelMajor ? "rgba(0,0,0,0.55)" : isNearFocus ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.3)"}
+              fill={isSelMajor ? "rgba(0,0,0,0.55)" : isNearFocus ? "rgba(255,255,255,0.673)" : "rgba(255,255,255,0.505)"}
               style={{ fontFamily: "var(--font-mono)", pointerEvents: "none", userSelect: "none" }}>
               {note.sharps > 0 ? `${note.sharps}♯` : note.sharps < 0 ? `${Math.abs(note.sharps)}♭` : "—"}
             </text>
@@ -223,7 +223,7 @@ export default function CircleOfFifths({ selected, onSelect }: Props) {
             <path
               d={arcPath(innerR + 4, midR - 4, startMinor, endMinor)}
               fill={innerFill}
-              stroke={isSelMinor || (isNearFocus && innerDeg) ? innerFill : "rgba(255,255,255,0.04)"}
+              stroke={isSelMinor || (isNearFocus && innerDeg) ? innerFill : "rgba(255,255,255,0.06)"}
               strokeWidth={isSelMinor || (isNearFocus && innerDeg) ? 0 : 0.5}
               style={{ cursor: "pointer", transition: "fill 0.22s ease, filter 0.25s ease", filter: innerFilter }}
               onMouseEnter={() => setHovered({ idx, kind: "minor" })}
@@ -232,7 +232,7 @@ export default function CircleOfFifths({ selected, onSelect }: Props) {
             />
             <text x={innerLabel.x} y={innerLabel.y} textAnchor="middle" dominantBaseline="middle"
               fontSize={note.minor.length > 3 ? 12 : 14} fontWeight="500"
-              fill={isSelMinor ? "rgba(255,255,255,0.95)" : isNearFocus && innerDeg ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.7)"}
+              fill={isSelMinor ? "rgba(255,255,255,0.95)" : isNearFocus && innerDeg ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.8)"}
               style={{ fontFamily: "var(--font-display)", fontStyle: "italic", letterSpacing: "-0.02em", pointerEvents: "none", userSelect: "none" }}>
               {note.minor}
             </text>
@@ -257,7 +257,7 @@ export default function CircleOfFifths({ selected, onSelect }: Props) {
       })}
 
       {/* Center */}
-      <circle cx={cx} cy={cy} r={innerR} fill="#0d0c0b" stroke="rgba(255,255,255,0.07)" strokeWidth={1}
+      <circle cx={cx} cy={cy} r={innerR} fill="oklch(0.17 0.006 60)" stroke="rgba(255,255,255,0.105)" strokeWidth={1}
         onClick={() => selected && onSelect(null)}
         style={{ cursor: selected ? "pointer" : "default" }} />
       <circle cx={cx} cy={cy} r={innerR - 1} fill="url(#cofCenter)" style={{ pointerEvents: "none" }} />
@@ -271,30 +271,30 @@ export default function CircleOfFifths({ selected, onSelect }: Props) {
             {selected.name}
           </text>
           <text x={cx} y={cy - 6} textAnchor="middle" fontSize={9} fontWeight="600"
-            fill="rgba(255,255,255,0.35)"
+            fill="rgba(255,255,255,0.56)"
             style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.14em" }}>
             {selected.kind === "major" ? "MAYOR" : "MENOR"}
             {" · "}
             {selected.sharps > 0 ? `${selected.sharps}♯` : selected.sharps < 0 ? `${Math.abs(selected.sharps)}♭` : "NATURAL"}
           </text>
           <text x={cx} y={cy + 14} textAnchor="middle" fontSize={9.5} fontWeight="500"
-            fill="rgba(255,255,255,0.55)"
+            fill="rgba(255,255,255,0.707)"
             style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
             {scaleNotes?.join("  ")}
           </text>
-          <text x={cx} y={cy + 34} textAnchor="middle" fontSize={8} fill="rgba(255,255,255,0.18)"
+          <text x={cx} y={cy + 34} textAnchor="middle" fontSize={8} fill="rgba(255,255,255,0.3)"
             style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>
             CLICK PARA CERRAR
           </text>
         </g>
       ) : (
         <g style={{ pointerEvents: "none" }}>
-          <text x={cx} y={cy - 18} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.25)" fontWeight="500"
+          <text x={cx} y={cy - 18} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.45)" fontWeight="500"
             style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.18em" }}>SENTIDO HORARIO</text>
           <text x={cx} y={cy + 3} textAnchor="middle" fontSize={28}
             fill="rgba(255,255,255,0.85)"
             style={{ fontFamily: "var(--font-display)", fontStyle: "italic", letterSpacing: "-0.02em" }}>↻ 5tas</text>
-          <text x={cx} y={cy + 24} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.25)" fontWeight="500"
+          <text x={cx} y={cy + 24} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.45)" fontWeight="500"
             style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.18em" }}>↺ 4TAS</text>
         </g>
       )}
@@ -304,7 +304,7 @@ export default function CircleOfFifths({ selected, onSelect }: Props) {
           x1={cx} y1={cy}
           x2={polar(outerR, CIRCLE_NOTES.findIndex(n => n.major === selectedNote.major) * 30).x}
           y2={polar(outerR, CIRCLE_NOTES.findIndex(n => n.major === selectedNote.major) * 30).y}
-          stroke="rgba(255,255,255,0.06)" strokeWidth={1} strokeDasharray="3 3"
+          stroke="rgba(255,255,255,0.09)" strokeWidth={1} strokeDasharray="3 3"
           style={{ pointerEvents: "none" }}
         />
       )}

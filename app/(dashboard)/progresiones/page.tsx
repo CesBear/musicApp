@@ -367,25 +367,25 @@ export default function ProgresionesPage() {
     fontSize: 10.5,
     fontFamily: "var(--font-mono)",
     letterSpacing: "0.05em",
-    border: active ? `1px solid ${color ?? DEGREE_COLORS[0]}` : "1px solid rgba(255,255,255,0.1)",
-    background: active ? (color ? `${color}18` : alphaOk(DEGREE_COLORS[0], 0.09)) : "rgba(255,255,255,0.04)",
-    color: active ? (color ?? DEGREE_COLORS[0]) : "rgba(255,255,255,0.55)",
+    border: active ? `1px solid ${color ?? DEGREE_COLORS[0]}` : "1px solid rgba(255,255,255,0.145)",
+    background: active ? (color ? `${color}18` : alphaOk(DEGREE_COLORS[0], 0.09)) : "rgba(255,255,255,0.06)",
+    color: active ? (color ?? DEGREE_COLORS[0]) : "rgba(255,255,255,0.707)",
     cursor: "pointer",
     transition: "all 0.15s",
   })
 
   const arrowBtn: React.CSSProperties = {
     width: 26, height: 26, borderRadius: 5,
-    border: "1px solid rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.04)",
-    color: "rgba(255,255,255,0.7)",
+    border: "1px solid rgba(255,255,255,0.145)",
+    background: "rgba(255,255,255,0.06)",
+    color: "rgba(255,255,255,0.8)",
     display: "flex", alignItems: "center", justifyContent: "center",
     fontSize: 14, cursor: "pointer", flexShrink: 0,
   }
 
   const lbl: React.CSSProperties = {
-    fontSize: 9, letterSpacing: "0.14em",
-    color: "rgba(255,255,255,0.28)",
+    fontSize: 10.5, letterSpacing: "0.14em",
+    color: "rgba(255,255,255,0.483)",
     fontFamily: "var(--font-mono)",
   }
 
@@ -435,7 +435,7 @@ export default function ProgresionesPage() {
                 {dual ? (
                   <>
                     <span style={{ fontSize: 13 }}>{sharp}</span>
-                    <span style={{ fontSize: 9.5, opacity: 0.55, fontFamily: "var(--font-mono)" }}>{flat}</span>
+                    <span style={{ fontSize: 10.5, opacity: 0.55, fontFamily: "var(--font-mono)" }}>{flat}</span>
                   </>
                 ) : sharp}
               </button>
@@ -451,7 +451,7 @@ export default function ProgresionesPage() {
           <span className="mc-section-hint">click = suena y se agrega · teclas 1–7 · máx 8</span>
           <div style={{ display: "flex", gap: 10, marginLeft: "auto", flexWrap: "wrap" }}>
             {FUNC_LEGEND.map(f => (
-              <span key={f.label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontFamily: "var(--font-mono)", letterSpacing: "0.08em", color: "rgba(255,255,255,0.38)" }}>
+              <span key={f.label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontFamily: "var(--font-mono)", letterSpacing: "0.08em", color: "rgba(255,255,255,0.584)" }}>
                 <span style={{ width: 7, height: 7, borderRadius: 2, background: f.color, opacity: 0.85 }} />
                 {f.label.toUpperCase()}
               </span>
@@ -460,7 +460,7 @@ export default function ProgresionesPage() {
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {chords.map((chord, i) => {
-            const col = FUNC_COLOR[chord.degree] ?? "rgba(255,255,255,0.6)"
+            const col = FUNC_COLOR[chord.degree] ?? "rgba(255,255,255,0.74)"
             return (
               <button key={i} onClick={() => addChord(i)}
                 disabled={progression.length >= 8}
@@ -475,14 +475,14 @@ export default function ProgresionesPage() {
                   opacity: progression.length >= 8 ? 0.45 : 1,
                   minWidth: 58,
                 }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700,
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, fontWeight: 700,
                   letterSpacing: "0.1em", color: col }}>{chord.degree}</span>
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 17, fontStyle: "italic",
                   fontWeight: 600, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
                   {chord.name}
                 </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 8,
-                  color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10,
+                  color: "rgba(255,255,255,0.483)", letterSpacing: "0.08em" }}>
                   {QUALITY_LABEL[chord.quality]}
                 </span>
               </button>
@@ -498,7 +498,7 @@ export default function ProgresionesPage() {
           <span className="mc-section-hint">{progression.length} / 8 · arrastra para reordenar · ⌫ borra</span>
           {progression.length > 0 && (
             <button onClick={resetKey}
-              style={{ ...pill(false), padding: "3px 9px", fontSize: 9.5 }}>
+              style={{ ...pill(false), padding: "3px 9px", fontSize: 10.5 }}>
               Limpiar
             </button>
           )}
@@ -513,8 +513,8 @@ export default function ProgresionesPage() {
                 <div style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
                   width: "100%", height: 56,
-                  border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 8,
-                  color: "rgba(255,255,255,0.2)", fontSize: 11,
+                  border: "1px dashed rgba(255,255,255,0.145)", borderRadius: 8,
+                  color: "rgba(255,255,255,0.343)", fontSize: 11,
                   fontFamily: "var(--font-mono)", letterSpacing: "0.1em",
                 }}>
                   SELECCIONA ACORDES ARRIBA
@@ -522,7 +522,7 @@ export default function ProgresionesPage() {
               ) : (
                 progression.map((degIdx, slotIdx) => {
                   const chord    = chords[degIdx]
-                  const col      = FUNC_COLOR[chord.degree] ?? "rgba(255,255,255,0.6)"
+                  const col      = FUNC_COLOR[chord.degree] ?? "rgba(255,255,255,0.74)"
                   const isActive = playing && activeStep === slotIdx
                   const isSel    = !playing && selectedSlot === slotIdx
                   return (
@@ -547,7 +547,7 @@ export default function ProgresionesPage() {
                         filter: isActive ? `drop-shadow(0 0 10px ${col}66)` : undefined,
                         opacity: dragIdx === slotIdx ? 0.4 : 1,
                       }}>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 8.5, fontWeight: 700,
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700,
                         letterSpacing: "0.1em", color: col, marginBottom: 2 }}>
                         {chord.degree}
                       </span>
@@ -561,7 +561,7 @@ export default function ProgresionesPage() {
                           {Array.from({ length: beats }).map((_, b) => (
                             <div key={b} style={{
                               width: 4, height: 4, borderRadius: "50%", flexShrink: 0,
-                              background: activeBeat === b ? col : "rgba(255,255,255,0.15)",
+                              background: activeBeat === b ? col : "rgba(255,255,255,0.22)",
                               transition: "background 0.06s",
                             }} />
                           ))}
@@ -574,7 +574,7 @@ export default function ProgresionesPage() {
                           position: "absolute", top: 3, right: 4,
                           width: 14, height: 14, borderRadius: "50%",
                           border: "none", background: "transparent",
-                          color: "rgba(255,255,255,0.25)", cursor: "pointer",
+                          color: "rgba(255,255,255,0.45)", cursor: "pointer",
                           fontSize: 11, lineHeight: 1, display: "flex",
                           alignItems: "center", justifyContent: "center", padding: 0,
                         }}>×</button>
@@ -591,12 +591,12 @@ export default function ProgresionesPage() {
                 {PRESETS[mode].map((preset, i) => (
                   <button key={i} onClick={() => applyPreset(preset.degrees)}
                     style={{
-                      ...pill(false), fontSize: 10,
+                      ...pill(false), fontSize: 11,
                       display: "flex", flexDirection: "column", alignItems: "flex-start",
                       gap: 2, padding: "6px 11px",
                     }}>
                     <span>{preset.label}</span>
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: "0.03em" }}>
+                    <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.56)", letterSpacing: "0.03em" }}>
                       {preset.degrees.map(d => chords[d].name).join(" · ")}
                     </span>
                   </button>
@@ -607,9 +607,9 @@ export default function ProgresionesPage() {
 
           {/* Derecha: diagrama del acorde seleccionado / sonando */}
           <div style={{
-            border: "1px solid rgba(255,255,255,0.07)",
+            border: "1px solid rgba(255,255,255,0.105)",
             borderRadius: 10,
-            background: "rgba(255,255,255,0.03)",
+            background: "rgba(255,255,255,0.048)",
             display: "flex", flexDirection: "column", alignItems: "center",
             justifyContent: "center",
             padding: "12px 8px 10px",
@@ -629,10 +629,10 @@ export default function ProgresionesPage() {
                     title="Voicing anterior (se usa al reproducir)"
                     style={{ ...arrowBtn, width: 22, height: 22, fontSize: 12 }}>‹</button>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 74 }}>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, fontWeight: 700, color: DEGREE_COLORS[0], letterSpacing: "0.07em" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, fontWeight: 700, color: DEGREE_COLORS[0], letterSpacing: "0.07em" }}>
                       {diagMain}
                     </span>
-                    <span style={{ ...lbl, fontSize: 8.5, color: "rgba(255,255,255,0.35)" }}>
+                    <span style={{ ...lbl, fontSize: 10, color: "rgba(255,255,255,0.56)" }}>
                       {diagSub} · {safeVoicing + 1}/{voicings.length}
                     </span>
                   </div>
@@ -648,9 +648,9 @@ export default function ProgresionesPage() {
                 alignItems: "center", justifyContent: "center", gap: 8, padding: 8,
               }}>
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontStyle: "italic",
-                  color: "rgba(255,255,255,0.6)" }}>{displayChord.name}</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 9,
-                  color: "rgba(255,255,255,0.2)", textAlign: "center", letterSpacing: "0.08em" }}>
+                  color: "rgba(255,255,255,0.74)" }}>{displayChord.name}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5,
+                  color: "rgba(255,255,255,0.343)", textAlign: "center", letterSpacing: "0.08em" }}>
                   SIN DIAGRAMA
                 </span>
               </div>
@@ -664,8 +664,8 @@ export default function ProgresionesPage() {
                   <rect x="11" y="8" width="6" height="12" rx="1.5" stroke="white" strokeWidth="1.4"/>
                   <rect x="18" y="8" width="6" height="12" rx="1.5" stroke="white" strokeWidth="1.4"/>
                 </svg>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 8.5, textAlign: "center",
-                  color: "rgba(255,255,255,0.18)", letterSpacing: "0.08em", lineHeight: 1.5 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textAlign: "center",
+                  color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", lineHeight: 1.5 }}>
                   CLICK EN UN ACORDE<br/>DE LA PROGRESIÓN
                 </span>
               </div>
@@ -690,13 +690,13 @@ export default function ProgresionesPage() {
         <div style={{ display: "flex", alignItems: "baseline", gap: 2, minWidth: 44 }}>
           <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 16,
             color: "#fff", lineHeight: 1 }}>{bpm}</span>
-          <span style={{ ...lbl, fontSize: 8 }}>BPM</span>
+          <span style={{ ...lbl, fontSize: 10 }}>BPM</span>
         </div>
 
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
+        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.145)", flexShrink: 0 }} />
 
         {/* Beats */}
-        <span style={{ ...lbl, fontSize: 8.5 }}>PULSOS</span>
+        <span style={{ ...lbl, fontSize: 10 }}>PULSOS</span>
         <div style={{ display: "flex", gap: 3 }}>
           {[1, 2, 4].map(b => (
             <button key={b} onClick={() => setBeats(b)}
@@ -704,10 +704,10 @@ export default function ProgresionesPage() {
           ))}
         </div>
 
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
+        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.145)", flexShrink: 0 }} />
 
         {/* Repeats */}
-        <span style={{ ...lbl, fontSize: 8.5 }}>REPS</span>
+        <span style={{ ...lbl, fontSize: 10 }}>REPS</span>
         <div style={{ display: "flex", gap: 3 }}>
           {[1, 2, 4, Infinity].map(r => (
             <button key={r} onClick={() => setRepeats(r)}
@@ -721,12 +721,12 @@ export default function ProgresionesPage() {
           <button onClick={play} disabled={progression.length === 0} style={{
             marginLeft: "auto",
             display: "flex", alignItems: "center", gap: 6,
-            padding: "7px 18px", borderRadius: 999,
-            fontSize: 12, fontWeight: 700,
+            padding: "9px 20px", borderRadius: 999,
+            fontSize: 13, fontWeight: 600,
             cursor: progression.length === 0 ? "not-allowed" : "pointer",
-            border: playing ? "1px solid rgba(255,80,80,0.4)" : `1px solid ${alphaOk(DEGREE_COLORS[0], 0.4)}`,
-            background: playing ? "rgba(255,80,80,0.12)" : alphaOk(DEGREE_COLORS[0], 0.08),
-            color: playing ? "#ff6060" : DEGREE_COLORS[0],
+            border: playing ? "1px solid rgba(255,80,80,0.4)" : "1px solid transparent",
+            background: playing ? "rgba(255,80,80,0.12)" : DEGREE_COLORS[0],
+            color: playing ? "#ff6060" : "#0a0a08",
             opacity: progression.length === 0 ? 0.4 : 1,
             transition: "all 0.15s",
           }}>

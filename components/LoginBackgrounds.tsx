@@ -103,7 +103,7 @@ export function BgPentagrama() {
       ctx.beginPath()
       ctx.moveTo(0, cy + i * lineGap)
       ctx.lineTo(W, cy + i * lineGap)
-      ctx.strokeStyle = "rgba(255,255,255,0.05)"
+      ctx.strokeStyle = "rgba(255,255,255,0.075)"
       ctx.lineWidth = 0.7
       ctx.stroke()
     }
@@ -207,7 +207,7 @@ export function BgMastil() {
     const fretW = fbW / NF
     const stringH = fbH / (NS - 1)
 
-    ctx.fillStyle = "rgba(255,255,255,0.012)"
+    ctx.fillStyle = "rgba(255,255,255,0.021)"
     ctx.fillRect(x0, y0, fbW, fbH)
 
     for (let f = 0; f <= NF; f++) {
@@ -215,7 +215,7 @@ export function BgMastil() {
       ctx.moveTo(x0 + f * fretW, y0)
       ctx.lineTo(x0 + f * fretW, y0 + fbH)
       const isOctave = f === 12
-      ctx.strokeStyle = isOctave ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.04)"
+      ctx.strokeStyle = isOctave ? "rgba(255,255,255,0.145)" : "rgba(255,255,255,0.06)"
       ctx.lineWidth = isOctave ? 1.2 : 0.7
       ctx.stroke()
     }
@@ -232,7 +232,7 @@ export function BgMastil() {
       const yy = y0 + fbH / 2
       ctx.beginPath()
       ctx.arc(xx, yy, 3, 0, Math.PI * 2)
-      ctx.fillStyle = "rgba(255,255,255,0.06)"
+      ctx.fillStyle = "rgba(255,255,255,0.09)"
       ctx.fill()
     })
 

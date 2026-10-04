@@ -61,10 +61,10 @@ export default function CirculoQuintasPage() {
                   <span style={{ fontFamily: "var(--font-display)", fontSize: 56, lineHeight: 1, fontStyle: "italic", letterSpacing: "-0.03em", color: "#fff" }}>{selected.name}</span>
                   <span className="mc-mono-tag">{selected.kind === "major" ? "MAYOR" : "MENOR"}</span>
                 </div>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 10, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.707)", marginTop: 10, lineHeight: 1.5 }}>
                   Relativa {selected.kind === "major" ? "menor" : "mayor"}: <span style={{ color: "rgba(255,255,255,0.9)" }}>{relativeName}</span>
                 </p>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 4, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.707)", marginTop: 4, lineHeight: 1.5 }}>
                   Armadura: <span style={{ color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-mono)" }}>
                     {note && note.sharps > 0 ? `${note.sharps}♯` : note && note.sharps < 0 ? `${Math.abs(note.sharps)}♭` : "natural"}
                   </span>
@@ -97,7 +97,7 @@ export default function CirculoQuintasPage() {
                     </div>
                   ))}
                 </div>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.505)", marginTop: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
                   La progresión más común en {selected.kind === "major" ? "mayor" : "menor"}.
                 </p>
               </div>
@@ -128,7 +128,7 @@ export default function CirculoQuintasPage() {
             </>
           ) : (
             <div className="mc-info-card mc-info-card-quiet">
-              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Toca cualquier tonalidad para ver sus notas, relativa y cadencia principal.</p>
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>Toca cualquier tonalidad para ver sus notas, relativa y cadencia principal.</p>
             </div>
           )}
         </div>

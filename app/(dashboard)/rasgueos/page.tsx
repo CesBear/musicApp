@@ -516,9 +516,9 @@ function strokeColor(s: Stroke, active: boolean): string {
     case "U": case "u":
       return active ? UP_C : `rgba(255,255,255,${dim ? 0.26 : 0.48})`
     case "x":
-      return active ? MUTE_C : "rgba(255,255,255,0.45)"
+      return active ? MUTE_C : "rgba(255,255,255,0.64)"
     default:
-      return "rgba(255,255,255,0.12)"
+      return "rgba(255,255,255,0.17)"
   }
 }
 
@@ -659,9 +659,9 @@ export default function RasgeosPage() {
     display: "inline-flex", alignItems: "center", gap: 6,
     padding: "7px 13px", borderRadius: 999, cursor: "pointer",
     fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", fontWeight: 600,
-    border: `1px solid ${on ? alpha(ACCENT, 0.5) : "rgba(255,255,255,0.10)"}`,
-    background: on ? alpha(ACCENT, 0.12) : "rgba(255,255,255,0.04)",
-    color: on ? ACCENT : "rgba(255,255,255,0.5)",
+    border: `1px solid ${on ? alpha(ACCENT, 0.5) : "rgba(255,255,255,0.145)"}`,
+    background: on ? alpha(ACCENT, 0.12) : "rgba(255,255,255,0.06)",
+    color: on ? ACCENT : "rgba(255,255,255,0.673)",
     transition: "all 0.15s",
   })
 
@@ -681,7 +681,7 @@ export default function RasgeosPage() {
           Ritmos reales agrupados por género, con progresiones de acordes que cambian
           por compás, metrónomo y entrenador de velocidad.
         </p>
-        <p style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+        <p style={{ marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.56)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
           ↓ bajada · ↑ subida · ✕ chuck · pequeño = fantasma · metal: power chords + distorsión · [espacio] = play
         </p>
       </div>
@@ -695,9 +695,9 @@ export default function RasgeosPage() {
               <button key={c.id} onClick={() => setCatId(c.id)} style={{
                 padding: "8px 15px", borderRadius: 999, cursor: "pointer",
                 fontFamily: "var(--font-display)", fontSize: 13.5, letterSpacing: "-0.01em",
-                border: `1px solid ${active ? alpha(ACCENT, 0.45) : "rgba(255,255,255,0.09)"}`,
-                background: active ? alpha(ACCENT, 0.13) : "rgba(255,255,255,0.03)",
-                color: active ? ACCENT : "rgba(255,255,255,0.65)",
+                border: `1px solid ${active ? alpha(ACCENT, 0.45) : "rgba(255,255,255,0.132)"}`,
+                background: active ? alpha(ACCENT, 0.13) : "rgba(255,255,255,0.048)",
+                color: active ? ACCENT : "rgba(255,255,255,0.77)",
                 transition: "all 0.15s",
               }}>
                 {c.label}
@@ -705,7 +705,7 @@ export default function RasgeosPage() {
             )
           })}
         </div>
-        <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.42)", lineHeight: 1.5 }}>
+        <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.616)", lineHeight: 1.5 }}>
           {category.blurb}
         </p>
       </div>
@@ -716,8 +716,8 @@ export default function RasgeosPage() {
           const selected = p.id === pattern.id
           return (
             <button key={p.id} onClick={() => selectPattern(p)} style={{
-              background: selected ? alpha(ACCENT, 0.10) : "rgba(255,255,255,0.03)",
-              border: `1px solid ${selected ? alpha(ACCENT, 0.45) : "rgba(255,255,255,0.08)"}`,
+              background: selected ? alpha(ACCENT, 0.10) : "rgba(255,255,255,0.048)",
+              border: `1px solid ${selected ? alpha(ACCENT, 0.45) : "rgba(255,255,255,0.12)"}`,
               borderRadius: 12, padding: "12px 13px", cursor: "pointer", textAlign: "left",
               display: "flex", flexDirection: "column", gap: 8,
               transition: "all 0.15s",
@@ -729,12 +729,12 @@ export default function RasgeosPage() {
                 }}>
                   {p.label}
                 </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "rgba(255,255,255,0.56)", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
                   {p.timeSignature}
                 </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: 2, whiteSpace: "nowrap", overflow: "hidden" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: 2, whiteSpace: "nowrap", overflow: "hidden" }}>
                   {p.strokes.map((s, i) => (
                     <span key={i} style={{
                       color: strokeColor(s, false),
@@ -749,12 +749,12 @@ export default function RasgeosPage() {
                   {[1, 2, 3].map(l => (
                     <span key={l} style={{
                       width: 4.5, height: 4.5, borderRadius: "50%",
-                      background: l <= p.level ? ACCENT : "rgba(255,255,255,0.12)",
+                      background: l <= p.level ? ACCENT : "rgba(255,255,255,0.17)",
                     }} />
                   ))}
                 </span>
               </div>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 8.5, color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(255,255,255,0.505)", letterSpacing: "0.05em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {progressionOf(p).join(" · ")}
               </span>
             </button>
@@ -764,7 +764,7 @@ export default function RasgeosPage() {
 
       {/* Selected pattern: visualizer + info */}
       <div className="mc-section" style={{
-        background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(255,255,255,0.041)", border: "1px solid rgba(255,255,255,0.105)",
         borderRadius: 14, padding: "16px 18px 18px",
       }}>
         <div className="mc-section-head" style={{ justifyContent: "flex-start", gap: 10 }}>
@@ -776,7 +776,7 @@ export default function RasgeosPage() {
 
         {/* Progresión de acordes (un acorde por compás) */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.12em", color: "rgba(255,255,255,0.3)" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.12em", color: "rgba(255,255,255,0.505)" }}>
             ACORDES
           </span>
           {progression.map((name, i) => {
@@ -785,16 +785,16 @@ export default function RasgeosPage() {
               <span key={i} style={{
                 fontFamily: "var(--font-display)", fontSize: 15, fontStyle: "italic",
                 padding: "3px 12px", borderRadius: 7,
-                border: `1px solid ${active ? alpha(ACCENT, 0.65) : "rgba(255,255,255,0.09)"}`,
-                background: active ? alpha(ACCENT, 0.16) : "rgba(255,255,255,0.03)",
-                color: active ? ACCENT : "rgba(255,255,255,0.75)",
+                border: `1px solid ${active ? alpha(ACCENT, 0.65) : "rgba(255,255,255,0.132)"}`,
+                background: active ? alpha(ACCENT, 0.16) : "rgba(255,255,255,0.048)",
+                color: active ? ACCENT : "rgba(255,255,255,0.83)",
                 transition: "all 0.1s",
               }}>
                 {name}
               </span>
             )
           })}
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 8.5, color: "rgba(255,255,255,0.25)", letterSpacing: "0.05em" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(255,255,255,0.45)", letterSpacing: "0.05em" }}>
             {progression.length > 1 ? "· 1 por compás" : "· acorde fijo"}
           </span>
         </div>
@@ -812,17 +812,17 @@ export default function RasgeosPage() {
                   stroke === "D" || stroke === "d" ? alpha(ACCENT, 0.20)
                   : stroke === "U" || stroke === "u" ? alpha(UP_C, 0.20)
                   : stroke === "x" ? alpha(MUTE_C, 0.18)
-                  : "rgba(255,255,255,0.05)"
+                  : "rgba(255,255,255,0.075)"
                 const activeBorder =
                   stroke === "D" || stroke === "d" ? alpha(ACCENT, 0.7)
                   : stroke === "U" || stroke === "u" ? alpha(UP_C, 0.7)
                   : stroke === "x" ? alpha(MUTE_C, 0.65)
-                  : "rgba(255,255,255,0.15)"
+                  : "rgba(255,255,255,0.22)"
                 return (
                   <div key={j} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
                     <span style={{
-                      fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.04em",
-                      color: label.strong ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.22)",
+                      fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.04em",
+                      color: label.strong ? "rgba(255,255,255,0.707)" : "rgba(255,255,255,0.386)",
                       fontWeight: label.strong ? 700 : 400,
                     }}>
                       {label.text}
@@ -831,8 +831,8 @@ export default function RasgeosPage() {
                       width: "100%", aspectRatio: "1", maxHeight: 52,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       borderRadius: 9,
-                      background: isActive ? activeBg : stroke !== "-" ? "rgba(255,255,255,0.045)" : "transparent",
-                      border: `1.5px solid ${isActive ? activeBorder : stroke !== "-" ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.04)"}`,
+                      background: isActive ? activeBg : stroke !== "-" ? "rgba(255,255,255,0.067)" : "transparent",
+                      border: `1.5px solid ${isActive ? activeBorder : stroke !== "-" ? "rgba(255,255,255,0.145)" : "rgba(255,255,255,0.06)"}`,
                       transition: "background 0.05s, border-color 0.05s",
                     }}>
                       <span style={{
@@ -852,7 +852,7 @@ export default function RasgeosPage() {
         </div>
 
         {/* Description + tip + songs */}
-        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+        <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.752)", lineHeight: 1.55 }}>
           {pattern.desc}
         </p>
         <div style={{
@@ -861,15 +861,15 @@ export default function RasgeosPage() {
           border: `1px solid ${alpha(ACCENT, 0.18)}`,
           borderRadius: 10, padding: "10px 13px",
         }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.14em", color: ACCENT, fontWeight: 700, paddingTop: 2 }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.14em", color: ACCENT, fontWeight: 700, paddingTop: 2 }}>
             CONSEJO
           </span>
-          <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>
+          <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.74)", lineHeight: 1.5 }}>
             {pattern.tip}
           </span>
         </div>
         {pattern.songs && (
-          <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.38)", fontFamily: "var(--font-mono)", letterSpacing: "0.02em" }}>
+          <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.584)", fontFamily: "var(--font-mono)", letterSpacing: "0.02em" }}>
             ♪ {pattern.songs}
           </p>
         )}
@@ -883,8 +883,8 @@ export default function RasgeosPage() {
           {bpm !== pattern.bpmHint && (
             <button onClick={() => setBpm(pattern.bpmHint)} style={{
               background: "none", border: "none", cursor: "pointer", padding: 0,
-              fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.05em",
-              color: "rgba(255,255,255,0.35)", textDecoration: "underline", textUnderlineOffset: 3,
+              fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.05em",
+              color: "rgba(255,255,255,0.56)", textDecoration: "underline", textUnderlineOffset: 3,
             }}>
               sugerido: {pattern.bpmHint}
             </button>
@@ -918,7 +918,7 @@ export default function RasgeosPage() {
             ⤴ +BPM AUTO {trainerOn ? "ON" : "OFF"}
           </button>
           {trainerOn && (
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "0.05em" }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgba(255,255,255,0.56)", letterSpacing: "0.05em" }}>
               +4 BPM cada 4 compases · máx 200
             </span>
           )}

@@ -51,12 +51,12 @@ export default function LectorPage() {
           onDragLeave={() => setDrag(false)}
           onDrop={onDrop}
           style={{
-            border: `2px dashed ${drag ? DEGREE_COLORS[0] : "rgba(255,255,255,0.14)"}`,
+            border: `2px dashed ${drag ? DEGREE_COLORS[0] : "rgba(255,255,255,0.203)"}`,
             borderRadius: 14,
             padding: "60px 24px",
             display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
             cursor: "pointer",
-            background: drag ? `${DEGREE_COLORS[0]}09` : "rgba(255,255,255,0.02)",
+            background: drag ? `${DEGREE_COLORS[0]}09` : "rgba(255,255,255,0.035)",
             transition: "all 0.15s",
           }}
         >
@@ -74,7 +74,7 @@ export default function LectorPage() {
             <p style={{ fontSize: 15, color: "#fff", fontWeight: 500, margin: 0 }}>
               Arrastra tu archivo Guitar Pro aquí
             </p>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "6px 0 0", fontFamily: "var(--font-mono)" }}>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.56)", margin: "6px 0 0", fontFamily: "var(--font-mono)" }}>
               o haz click para buscar — .gp .gp3 .gp4 .gp5 .gpx
             </p>
           </div>

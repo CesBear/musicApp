@@ -2,12 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { playGuitarString, getAudioTime, getVisualLatencyMs } from "@/lib/audio"
-import { GUITAR_TUNING_MIDI } from "@/data/scales"
+import { GUITAR_TUNING_MIDI, STRING_LABELS } from "@/data/scales"
 
 export type TabNote  = { string: number; fret: number }   // string: 0 = low E ... 5 = high e
-export type TieType  = "h" | "p" | "s" | "t"              // hammer-on, pull-off, slide, tap
+export type TieType  = "h" | "p" | "s" | "t" | "b"        // hammer-on, pull-off, slide, tap, bend
 export type PickDir  = "d" | "u"                          // downstroke, upstroke
-export type TabStep  = { notes: TabNote[]; tie?: TieType; pick?: PickDir }
+export type TabStep  = {
+  notes: TabNote[]
+  tie?:  TieType
+  pick?: PickDir
+  bend?: 1 | 2          // semitonos del bend (tie "b"): suena la nota objetivo
+}
 
 export interface TabExercise {
   id:             string
@@ -17,18 +22,20 @@ export interface TabExercise {
   bpmHint?:       number
   subdivision?:   number     // steps por pulso — 2 = corcheas, 3 = tresillo, 4 = semicorcheas... (default 2)
   beatsPerGroup?: number     // steps por grupo de compás, default = subdivision * 4
+  hidden?:        boolean    // ejercicio de oído: la tab queda oculta hasta revelarla
   steps:          TabStep[]
 }
 
-const TIE_LABEL: Record<TieType, string> = { h: "H", p: "P", s: "S", t: "T" }
+const TIE_LABEL: Record<TieType, string> = { h: "H", p: "P", s: "S", t: "T", b: "B" }
 const TIE_COLOR: Record<TieType, string> = {
   h: "oklch(0.78 0.12 240)",
   p: "oklch(0.78 0.12 240)",
   s: "oklch(0.80 0.14 150)",
   t: "oklch(0.80 0.15 70)",
+  b: "oklch(0.80 0.14 350)",
 }
 // Legato (hammer/pull) has no pick attack → quieter. Taps hit harder. Picked notes are the loudest.
-const TIE_GAIN: Partial<Record<TieType, number>> = { h: 0.065, p: 0.065, t: 0.115, s: 0.10 }
+const TIE_GAIN: Partial<Record<TieType, number>> = { h: 0.065, p: 0.065, t: 0.115, s: 0.10, b: 0.10 }
 
 const ACCENT = "oklch(0.80 0.15 70)"
 // "oklch(L C H)" → "oklch(L C H / a)" — the only valid way to add alpha to an oklch() string.
@@ -46,6 +53,7 @@ function PickGlyph({ x, y, dir, color }: { x: number; y: number; dir: PickDir; c
 export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; bpm: number }) {
   const [playing, setPlaying]       = useState(false)
   const [activeStep, setActiveStep] = useState(-1)
+  const [revealed, setRevealed]     = useState(!exercise.hidden)
 
   const bpmRef      = useRef(bpm)
   const schedRef    = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -82,7 +90,7 @@ export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; b
         // strum stagger — a real pick pass never hits every string at once.
         const STRUM_STAGGER = Math.min(0.018, secPerStep * 0.3)
         step.notes.forEach((n, k) => {
-          const midi = GUITAR_TUNING_MIDI[n.string] + n.fret
+          const midi = GUITAR_TUNING_MIDI[n.string] + n.fret + (step.bend ?? 0)
           playGuitarString(midi, rel + k * STRUM_STAGGER, gain, secPerStep * 1.6)
         })
 
@@ -101,7 +109,7 @@ export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; b
 
   // ─── Layout ────────────────────────────────────────────────────────────────
   const STEP_W   = 34
-  const PAD_L    = 34
+  const PAD_L    = 52   // clave TAB + nombre de cada cuerda
   const PAD_R    = 16
   const LINE_GAP = 14
   const TOP      = 26
@@ -117,18 +125,21 @@ export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; b
   // Pick direction per step: ties have no pick attack (no symbol). Otherwise use an
   // explicit override if given, else alternate down/up like real alternate picking —
   // resuming the alternation naturally after any explicit override.
+  const pickDirs: (PickDir | null)[] = []
   let expectedPick: PickDir = "d"
-  const pickDirs: (PickDir | null)[] = exercise.steps.map(step => {
-    if (step.tie) return null
-    const dir = step.pick ?? expectedPick
+  for (const step of exercise.steps) {
+    if (step.tie && step.tie !== "b") { pickDirs.push(null); continue }
+    const dir: PickDir = step.pick ?? expectedPick
     expectedPick = dir === "d" ? "u" : "d"
-    return dir
-  })
+    // un silencio conserva la alternancia (la mano sigue el pulso) pero no se dibuja
+    pickDirs.push(step.notes.length === 0 ? null : dir)
+  }
+
 
   return (
     <div style={{
-      border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10,
-      background: "rgba(255,255,255,0.02)", padding: "10px 12px",
+      border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10,
+      background: "rgba(255,255,255,0.035)", padding: "10px 12px",
       display: "flex", flexDirection: "column", gap: 8,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
@@ -137,7 +148,7 @@ export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; b
             {exercise.title}
           </div>
           {exercise.desc && (
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.42)", marginTop: 2, lineHeight: 1.4 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.616)", marginTop: 2, lineHeight: 1.4 }}>
               {exercise.desc}
             </div>
           )}
@@ -156,13 +167,31 @@ export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; b
         </button>
       </div>
 
-      <div style={{ overflowX: "auto" }}>
-        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: "block", minWidth: W }}>
+      <div style={{ overflowX: "auto", position: "relative" }}>
+        {!revealed && (
+          <button onClick={() => setRevealed(true)} style={{
+            position: "absolute", inset: 0, zIndex: 1, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "color-mix(in oklch, var(--surface-1) 70%, transparent)", border: "1px dashed var(--border-2)", borderRadius: 8,
+            fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.08em", color: "var(--text-2)",
+          }}>
+            TAB OCULTA · ESCUCHA Y BÚSCALA · CLIC PARA REVELAR
+          </button>
+        )}
+        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: "block", minWidth: W, filter: revealed ? undefined : "blur(7px)", transition: "filter 0.2s" }}>
           {/* "TAB" clef, stacked vertically like real tab notation */}
           {["T", "A", "B"].map((ch, k) => (
             <text key={ch} x={6} y={TOP + (1 + k * 2) * LINE_GAP + 4} fontSize={10} fontWeight={700}
-              fill="rgba(255,255,255,0.32)" style={{ fontFamily: "var(--font-mono)" }}>
+              fill="rgba(255,255,255,0.527)" style={{ fontFamily: "var(--font-mono)" }}>
               {ch}
+            </text>
+          ))}
+
+          {/* Afinación: nombre de cada cuerda al inicio de su línea */}
+          {[0, 1, 2, 3, 4, 5].map(s => (
+            <text key={`lbl-${s}`} x={PAD_L - 16} y={rowY(s) + 3.5} textAnchor="end" fontSize={10.5} fontWeight={600}
+              fill="var(--text-2)" style={{ fontFamily: "var(--font-mono)" }}>
+              {STRING_LABELS[s]}
             </text>
           ))}
 
@@ -171,7 +200,7 @@ export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; b
             <line key={s}
               x1={PAD_L - 10} y1={rowY(s)}
               x2={W - PAD_R} y2={rowY(s)}
-              stroke="rgba(255,255,255,0.16)" strokeWidth={1} />
+              stroke="rgba(255,255,255,0.247)" strokeWidth={1} />
           ))}
 
           {/* bar lines */}
@@ -181,17 +210,17 @@ export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; b
             const x = pos(i) - STEP_W / 2
             return (
               <line key={g} x1={x} y1={TOP - 6} x2={x} y2={TOP + LINE_GAP * 5 + 6}
-                stroke="rgba(255,255,255,0.20)" strokeWidth={1} />
+                stroke="rgba(255,255,255,0.343)" strokeWidth={1} />
             )
           })}
           {/* closing bar line */}
           <line x1={pos(exercise.steps.length - 1) + STEP_W / 2} y1={TOP - 6}
             x2={pos(exercise.steps.length - 1) + STEP_W / 2} y2={TOP + LINE_GAP * 5 + 6}
-            stroke="rgba(255,255,255,0.20)" strokeWidth={1} />
+            stroke="rgba(255,255,255,0.343)" strokeWidth={1} />
 
           {/* tie arcs (hammer-on / pull-off) and slide lines, drawn under the note badges */}
           {exercise.steps.map((step, i) => {
-            if (!step.tie || i === 0 || step.tie === "t") return null
+            if (!step.tie || i === 0 || step.tie === "t" || step.tie === "b") return null
             const from = exercise.steps[i - 1].notes[0]
             const to   = step.notes[0]
             if (!from || !to) return null
@@ -226,10 +255,10 @@ export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; b
                 {step.tie ? (
                   <text x={x} y={TOP - 14} textAnchor="middle" fontSize={8.5} fontWeight={700}
                     fill={TIE_COLOR[step.tie]} style={{ fontFamily: "var(--font-mono)" }}>
-                    {TIE_LABEL[step.tie]}
+                    {TIE_LABEL[step.tie]}{step.bend ? (step.bend === 1 ? "½" : "1") : ""}
                   </text>
                 ) : pickDirs[i] && (
-                  <PickGlyph x={x} y={TOP - 15} dir={pickDirs[i]!} color={active ? ACCENT : "rgba(255,255,255,0.4)"} />
+                  <PickGlyph x={x} y={TOP - 15} dir={pickDirs[i]!} color={active ? ACCENT : "rgba(255,255,255,0.6)"} />
                 )}
                 {step.notes.map((n, j) => {
                   const y = rowY(n.string)
@@ -241,6 +270,10 @@ export default function TabDiagram({ exercise, bpm }: { exercise: TabExercise; b
                         style={{ fontFamily: "var(--font-mono)", transition: "fill 0.05s" }}>
                         {n.fret}
                       </text>
+                      {step.bend && (
+                        <path d={`M ${x + 8} ${y - 1} Q ${x + 14} ${y - 2} ${x + 15} ${y - 10}`} fill="none"
+                          stroke={TIE_COLOR.b} strokeWidth={1.3} />
+                      )}
                     </g>
                   )
                 })}

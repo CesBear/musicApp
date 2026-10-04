@@ -20,7 +20,7 @@ const instrumentSerif = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
-  title: "MusicApp",
+  title: "MaestroMusic",
   description: "Tu espacio de guitarra eléctrica",
 }
 

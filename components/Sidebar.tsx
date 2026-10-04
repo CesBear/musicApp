@@ -189,8 +189,8 @@ export default function Sidebar() {
           </svg>
         </div>
         <div className="flex flex-col leading-tight">
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 17, fontStyle: "italic", color: "#fff", letterSpacing: "-0.02em" }}>MusicApp</span>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}>ESTUDIO · v2.4</span>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: 17, fontStyle: "italic", color: "#fff", letterSpacing: "-0.02em" }}>MaestroMusic</span>
+          <span style={{ fontSize: 10.5, color: "var(--text-3)", fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}>ESTUDIO DE GUITARRA</span>
         </div>
       </div>
 
@@ -222,7 +222,7 @@ export default function Sidebar() {
           ))}
         </div>
         <div className="mc-practice-foot">
-          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Esta semana</span>
+          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 11 }}>Esta semana</span>
           <span style={{ color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-mono)", fontSize: 11.5 }}>{weekLabel}</span>
         </div>
       </div>
@@ -234,7 +234,7 @@ export default function Sidebar() {
             <p style={{ fontSize: 12.5, color: "#fff", fontWeight: 500, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {userName}
             </p>
-            <p style={{ fontSize: 10.5, color: "rgba(255,255,255,0.35)", margin: "2px 0 0", fontFamily: "var(--font-mono)" }}>Estudiante</p>
+            <p style={{ fontSize: 10.5, color: "rgba(255,255,255,0.56)", margin: "2px 0 0", fontFamily: "var(--font-mono)" }}>Estudiante</p>
           </div>
           <button onClick={() => signOut({ callbackUrl: "/login" })} className="mc-signout-btn" aria-label="Cerrar sesión">
             <Icon.logout />

@@ -123,7 +123,7 @@ export default function ProgresoPage() {
             <div key={s.label} className="mc-info-card">
               <p className="mc-info-label">{s.label}</p>
               <p style={{ fontSize: 32, fontWeight: 700, color: DEGREE_COLORS[0], fontFamily: "var(--font-mono)", lineHeight: 1.1, marginTop: 6 }}>{s.value}</p>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4, fontFamily: "var(--font-mono)" }}>{s.sub}</p>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.505)", marginTop: 4, fontFamily: "var(--font-mono)" }}>{s.sub}</p>
             </div>
           ))}
         </div>
@@ -142,9 +142,9 @@ export default function ProgresoPage() {
                       style={{
                         width: 13, height: 13, borderRadius: 2,
                         background: intensity === 0
-                          ? "rgba(255,255,255,0.04)"
+                          ? "rgba(255,255,255,0.06)"
                           : `oklch(0.80 0.15 70 / ${intensity})`,
-                        outline: d.isToday ? "1.5px solid rgba(255,255,255,0.3)" : "none",
+                        outline: d.isToday ? "1.5px solid rgba(255,255,255,0.505)" : "none",
                       }}
                     />
                   )
@@ -153,12 +153,12 @@ export default function ProgresoPage() {
             ))}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-mono)" }}>Menos</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-mono)" }}>Menos</span>
             {[0.04, 0.25, 0.55, 0.9].map((op, i) => (
               <div key={i} style={{ width: 10, height: 10, borderRadius: 2,
-                background: i === 0 ? "rgba(255,255,255,0.04)" : `oklch(0.80 0.15 70 / ${op})` }} />
+                background: i === 0 ? "rgba(255,255,255,0.06)" : `oklch(0.80 0.15 70 / ${op})` }} />
             ))}
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-mono)" }}>Más</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-mono)" }}>Más</span>
           </div>
         </div>
 
@@ -166,7 +166,7 @@ export default function ProgresoPage() {
 
       {/* Register form */}
       {showForm && (
-        <div className="mc-info-card" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
+        <div className="mc-info-card" style={{ borderColor: "rgba(255,255,255,0.17)" }}>
           <p className="mc-info-label" style={{ marginBottom: 16 }}>Nueva sesión de práctica</p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
             {[
@@ -176,37 +176,37 @@ export default function ProgresoPage() {
               { label: "BPM del ejercicio", key: "bpm",    placeholder: "80",        type: "number" },
             ].map(({ label, key, placeholder, type }) => (
               <div key={key}>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 5, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</p>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.505)", marginBottom: 5, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</p>
                 <input type={type} placeholder={placeholder}
                   value={(form as Record<string, string | number>)[key] as string}
                   onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
-                  style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                  style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.145)",
                     borderRadius: 10, padding: "9px 12px", color: "#fff", fontSize: 13, fontFamily: "var(--font-sans)", outline: "none" }} />
               </div>
             ))}
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Estado de ánimo</p>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.505)", marginBottom: 8, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Estado de ánimo</p>
             <div style={{ display: "flex", gap: 8 }}>
               {[1,2,3,4,5].map(n => (
                 <button key={n} onClick={() => setForm(p => ({ ...p, mood: n }))}
-                  style={{ width: 40, height: 40, borderRadius: 10, border: `1.5px solid ${form.mood === n ? MOOD_COLORS[n] : "rgba(255,255,255,0.1)"}`,
-                    background: form.mood === n ? `${MOOD_COLORS[n]}20` : "rgba(255,255,255,0.03)",
-                    color: form.mood === n ? MOOD_COLORS[n] : "rgba(255,255,255,0.3)", fontSize: 13, fontWeight: 600,
+                  style={{ width: 40, height: 40, borderRadius: 10, border: `1.5px solid ${form.mood === n ? MOOD_COLORS[n] : "rgba(255,255,255,0.145)"}`,
+                    background: form.mood === n ? `${MOOD_COLORS[n]}20` : "rgba(255,255,255,0.048)",
+                    color: form.mood === n ? MOOD_COLORS[n] : "rgba(255,255,255,0.505)", fontSize: 13, fontWeight: 600,
                     cursor: "pointer", transition: "all 0.15s" }}>
                   {n}
                 </button>
               ))}
-              <span style={{ alignSelf: "center", fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{MOOD_LABELS[form.mood]}</span>
+              <span style={{ alignSelf: "center", fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{MOOD_LABELS[form.mood]}</span>
             </div>
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 5, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Notas</p>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.505)", marginBottom: 5, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Notas</p>
             <textarea placeholder="Qué salió bien, qué mejorar..."
               value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-              rows={3} style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+              rows={3} style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.145)",
                 borderRadius: 10, padding: "9px 12px", color: "#fff", fontSize: 13, fontFamily: "var(--font-sans)", outline: "none", resize: "vertical" }} />
           </div>
 
@@ -218,22 +218,22 @@ export default function ProgresoPage() {
       <div>
         <p className="mc-info-label" style={{ marginBottom: 12 }}>Historial</p>
         {loading ? (
-          <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 13 }}>Cargando...</p>
+          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>Cargando...</p>
         ) : sessions.length === 0 ? (
           <div className="mc-info-card mc-info-card-quiet" style={{ textAlign: "center", padding: 40 }}>
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>No hay sesiones registradas. ¡Empieza hoy!</p>
+            <p style={{ color: "rgba(255,255,255,0.505)", fontSize: 13 }}>No hay sesiones registradas. ¡Empieza hoy!</p>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {sessions.slice(0, 20).map(s => (
               <div key={s.id} className="mc-info-card" style={{ flexDirection: "row", alignItems: "center", gap: 16, padding: "12px 16px" }}>
                 <div style={{ minWidth: 90 }}>
-                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-mono)" }}>{s.date}</p>
+                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.56)", fontFamily: "var(--font-mono)" }}>{s.date}</p>
                   <p style={{ fontSize: 13, fontWeight: 600, color: DEGREE_COLORS[0], fontFamily: "var(--font-mono)" }}>{s.duration_min}min</p>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {s.what && <p style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 500, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.what}</p>}
-                  {s.notes && <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.4)", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.notes}</p>}
+                  {s.what && <p style={{ fontSize: 13, color: "rgba(255,255,255,0.86)", fontWeight: 500, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.what}</p>}
+                  {s.notes && <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.6)", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.notes}</p>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                   {s.bpm && <span className="mc-mono-tag">{s.bpm} BPM</span>}
@@ -244,7 +244,7 @@ export default function ProgresoPage() {
                       {s.mood}
                     </span>
                   )}
-                  <button onClick={() => del(s.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)",
+                  <button onClick={() => del(s.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.343)",
                     cursor: "pointer", fontSize: 14, padding: "4px 6px" }} title="Eliminar">×</button>
                 </div>
               </div>

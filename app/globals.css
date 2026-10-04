@@ -43,21 +43,24 @@
 
 /* ─── MusicApp design tokens ─────────────────────────────────── */
 :root {
-  --background: oklch(0.155 0.005 60);
+  --background: oklch(0.19 0.006 60);
   --foreground: oklch(0.985 0 0);
 
-  --bg-1: oklch(0.155 0.005 60);
-  --bg-2: oklch(0.185 0.005 60);
-  --surface-1: rgba(255,255,255,0.035);
-  --surface-2: rgba(255,255,255,0.06);
-  --surface-3: rgba(255,255,255,0.09);
-  --border-1: rgba(255,255,255,0.07);
-  --border-2: rgba(255,255,255,0.12);
-  --border-3: rgba(255,255,255,0.20);
+  /* Fondo un escalón más claro que antes (0.155) y superficies opacas: las
+     tarjetas se separan del fondo sin depender de blancos casi transparentes. */
+  --bg-0: oklch(0.165 0.006 60);   /* sidebar / zonas hundidas */
+  --bg-1: oklch(0.19 0.006 60);
+  --bg-2: oklch(0.215 0.007 60);
+  --surface-1: oklch(0.225 0.007 60);
+  --surface-2: oklch(0.255 0.008 60);
+  --surface-3: oklch(0.295 0.009 60);
+  --border-1: rgba(255,255,255,0.12);
+  --border-2: rgba(255,255,255,0.18);
+  --border-3: rgba(255,255,255,0.30);
   --text-1: rgba(255,255,255,0.95);
-  --text-2: rgba(255,255,255,0.60);
-  --text-3: rgba(255,255,255,0.35);
-  --text-4: rgba(255,255,255,0.18);
+  --text-2: rgba(255,255,255,0.74);
+  --text-3: rgba(255,255,255,0.58);   /* ≥4.5:1 sobre bg-1 */
+  --text-4: rgba(255,255,255,0.40);
 
   --mc-accent: oklch(0.80 0.15 70);
   --mc-accent-soft: oklch(0.80 0.15 70 / 0.15);
@@ -66,9 +69,9 @@
   --radius: 0.625rem;
 
   /* shadcn dark theme (kept for shadcn components) */
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.225 0.007 60);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.225 0.007 60);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
@@ -82,7 +85,7 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --sidebar: oklch(0.13 0.005 60);
+  --sidebar: oklch(0.165 0.006 60);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -170,7 +173,7 @@ body::before {
 }
 .mc-mono-mini {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10.5px;
   letter-spacing: 0.12em;
   color: var(--text-3);
   font-weight: 500;
@@ -296,7 +299,7 @@ body::before {
 .mc-scale-group { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .mc-scale-group-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-3);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -342,14 +345,14 @@ body::before {
 .mc-anatomy-note {
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 6px 10px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.048);
   border-radius: 8px;
   border: 1px solid var(--border-1);
   min-width: 38px;
 }
 .mc-anatomy-deg {
   font-family: var(--font-mono);
-  font-size: 9.5px; font-weight: 700;
+  font-size: 10.5px; font-weight: 700;
   letter-spacing: 0.04em;
 }
 .mc-anatomy-noteName {
@@ -423,7 +426,7 @@ body::before {
 }
 .mc-pos-range {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-4);
   letter-spacing: 0.02em;
 }
@@ -437,7 +440,7 @@ body::before {
 }
 .mc-legend-dot span {
   font-family: var(--font-mono);
-  font-size: 9px; font-weight: 700;
+  font-size: 10.5px; font-weight: 700;
   color: #0a0a08;
   letter-spacing: -0.02em;
 }
@@ -474,7 +477,7 @@ body::before {
 .mc-diatonic-suffix { font-size: 18px; color: var(--text-2); margin-left: 1px; }
 .mc-diatonic-quality {
   font-family: var(--font-mono);
-  font-size: 9.5px; color: var(--text-3);
+  font-size: 10.5px; color: var(--text-3);
   letter-spacing: 0.08em; text-transform: uppercase;
   margin-top: 2px;
 }
@@ -568,19 +571,19 @@ body::before {
 .mc-string-fret.open { background: rgba(80,200,140,0.12); color: oklch(0.78 0.14 150); }
 .mc-string-finger {
   font-family: var(--font-mono);
-  font-size: 9.5px; color: var(--text-3);
+  font-size: 10.5px; color: var(--text-3);
   letter-spacing: 0.04em;
 }
 .mc-string-label {
   font-family: var(--font-mono);
-  font-size: 10px; color: var(--text-4);
+  font-size: 11px; color: var(--text-4);
   letter-spacing: 0.04em;
 }
 .mc-finger-legend {
   display: flex; gap: 12px;
   margin-top: 14px;
   font-family: var(--font-mono);
-  font-size: 10px; color: var(--text-3);
+  font-size: 11px; color: var(--text-3);
   letter-spacing: 0.04em;
   flex-wrap: wrap;
 }
@@ -604,7 +607,7 @@ body::before {
 @media (max-width: 1100px) { .mc-circulo-grid { grid-template-columns: 1fr; } }
 .mc-circulo-stage {
   display: flex; justify-content: center; padding: 20px;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.02), transparent 70%);
+  background: radial-gradient(circle at center, rgba(255,255,255,0.035), transparent 70%);
   border-radius: 20px;
   border: 1px solid var(--border-1);
 }
@@ -613,13 +616,13 @@ body::before {
   flex: 1;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 12px 8px 11px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.048);
   border: 1px solid var(--border-1);
   border-radius: 8px;
 }
 .mc-cadence-deg {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   color: var(--text-3); font-weight: 600;
 }
@@ -678,7 +681,7 @@ body::before {
 }
 .mc-tab-count {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-3);
   background: var(--surface-2);
   padding: 1px 6px;
@@ -711,7 +714,7 @@ body::before {
 .mc-lesson-status { padding-top: 2px; min-width: 44px; }
 .mc-lesson-current {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 0.1em;
   color: var(--mc-accent);
   background: var(--mc-accent-soft);
@@ -746,17 +749,17 @@ body::before {
 .mc-material-row {
   display: flex; align-items: center; gap: 12px;
   padding: 11px 14px;
-  background: rgba(255,255,255,0.025);
+  background: rgba(255,255,255,0.041);
   border: 1px solid var(--border-1);
   border-radius: 10px;
   transition: background 0.15s;
 }
-.mc-material-row:hover { background: rgba(255,255,255,0.05); }
+.mc-material-row:hover { background: rgba(255,255,255,0.075); }
 .mc-material-icon {
   width: 38px; height: 38px; border-radius: 8px;
   display: grid; place-items: center;
   font-family: var(--font-mono);
-  font-size: 10px; font-weight: 700;
+  font-size: 11px; font-weight: 700;
   letter-spacing: 0.05em;
   flex-shrink: 0;
 }
@@ -777,7 +780,7 @@ body::before {
 .mc-quote {
   margin: 0;
   padding: 14px 18px 14px 26px;
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.035);
   border-left: 2px solid var(--mc-accent);
   border-radius: 0 10px 10px 0;
   font-family: var(--font-display);
@@ -796,7 +799,7 @@ body::before {
 .mc-table th {
   text-align: left;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-3);
@@ -851,7 +854,7 @@ body::before {
 
 /* Sidebar */
 .mc-sidebar {
-  background: oklch(0.13 0.005 60);
+  background: var(--bg-0);
   border-right: 1px solid var(--border-1);
   display: flex;
   flex-direction: column;
@@ -868,7 +871,7 @@ body::before {
 .mc-brand-mark {
   width: 32px; height: 32px;
   border-radius: 9px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.035));
   border: 1px solid var(--border-2);
   display: grid; place-items: center;
 }
@@ -913,9 +916,9 @@ body::before {
 .mc-practice-cell {
   aspect-ratio: 1;
   border-radius: 2px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.075);
 }
-.mc-practice-cell.filled { background: rgba(255,255,255,0.18); }
+.mc-practice-cell.filled { background: rgba(255,255,255,0.3); }
 .mc-practice-cell.recent { background: var(--mc-accent); opacity: 0.85; }
 .mc-practice-foot { display: flex; justify-content: space-between; align-items: baseline; }
 
@@ -965,8 +968,8 @@ body::before {
 .mc-login-grid-bg {
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px);
   background-size: 56px 56px;
   pointer-events: none;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
@@ -983,7 +986,7 @@ body::before {
   width: 56px; height: 56px;
   border-radius: 16px;
   border: 1px solid var(--border-2);
-  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+  background: linear-gradient(135deg, rgba(255,255,255,0.09), rgba(255,255,255,0.018));
   display: grid; place-items: center;
 }
 .mc-login-title {
@@ -1005,7 +1008,7 @@ body::before {
 .mc-login-card {
   width: 100%;
   padding: 28px 28px 24px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.048);
   border: 1px solid var(--border-1);
   border-radius: 20px;
   backdrop-filter: blur(20px);
@@ -1027,7 +1030,7 @@ body::before {
 .mc-login-divider {
   display: flex; align-items: center; gap: 12px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-3);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1040,7 +1043,7 @@ body::before {
 .mc-login-field { display: flex; flex-direction: column; gap: 5px; }
 .mc-login-field span {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-3); font-weight: 500;
@@ -1048,7 +1051,7 @@ body::before {
 .mc-login-field input {
   width: 100%; height: 38px;
   padding: 0 12px;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.06);
   border: 1px solid var(--border-1);
   border-radius: 8px;
   color: #fff;
@@ -1059,7 +1062,7 @@ body::before {
 .mc-login-field input:focus {
   outline: none;
   border-color: var(--mc-accent-border);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.09);
 }
 .mc-login-submit {
   width: 100%; height: 42px;
@@ -1084,18 +1087,31 @@ body::before {
 
 /* Fretboard wrapper */
 .mc-fretboard-wrap {
-  overflow-x: auto;
-  border-radius: 18px;
+  border-radius: 14px;
   border: 1px solid var(--border-1);
-  background: linear-gradient(180deg, #0d0c0b 0%, #0a0908 100%);
+  background: var(--bg-0);
   position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 24px -12px rgba(0,0,0,0.5);
 }
-.mc-fretboard-wrap::before {
+.mc-fretboard-scroll {
+  overflow-x: auto;
+  padding: 4px 0 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-3) transparent;
+}
+/* Degradado en el borde con trastes ocultos: avisa que el mástil sigue */
+.mc-fretboard-wrap::before,
+.mc-fretboard-wrap::after {
   content: "";
-  position: absolute; left: 0; right: 0; top: 0; height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
-  pointer-events: none;
+  position: absolute; top: 0; bottom: 0; width: 56px;
+  pointer-events: none; z-index: 1;
+  opacity: 0; transition: opacity 0.2s ease;
 }
+.mc-fretboard-wrap::before { left: 0;  background: linear-gradient(90deg, var(--bg-0), transparent); }
+.mc-fretboard-wrap::after  { right: 0; background: linear-gradient(270deg, var(--bg-0), transparent); }
+.mc-fretboard-wrap[data-fade-left]::before,
+.mc-fretboard-wrap[data-fade-right]::after { opacity: 1; }
 
 /* ─── MusicApp · Login v2 styles ─────────────────────────────
    Append this block to your app/globals.css (or merge with the
@@ -1120,8 +1136,8 @@ body::before {
 .mc-login-grid-bg {
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px);
   background-size: 56px 56px;
   pointer-events: none;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
@@ -1155,20 +1171,20 @@ body::before {
 .mc-login-mark-v2 {
   width: 64px; height: 64px;
   border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.203);
   background:
-    radial-gradient(120% 120% at 30% 20%, rgba(255,255,255,0.10), rgba(255,255,255,0.01)),
-    rgba(255,255,255,0.02);
+    radial-gradient(120% 120% at 30% 20%, rgba(255,255,255,0.145), rgba(255,255,255,0.018)),
+    rgba(255,255,255,0.035);
   display: grid; place-items: center;
   transition: transform 0.6s cubic-bezier(.2,.8,.2,1), box-shadow 0.6s;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09);
 }
 .mc-login-mark-v2.beat {
   transform: scale(1.04);
   box-shadow:
     0 8px 30px rgba(0,0,0,0.35),
     0 0 24px oklch(0.80 0.15 70 / 0.2),
-    inset 0 1px 0 rgba(255,255,255,0.08);
+    inset 0 1px 0 rgba(255,255,255,0.12);
 }
 .mc-login-title-v2 {
   font-family: var(--font-display);
@@ -1190,13 +1206,13 @@ body::before {
 .mc-login-card-v2 {
   width: 100%;
   padding: 26px 26px 22px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
-  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.067), rgba(255,255,255,0.035));
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 22px;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   display: flex; flex-direction: column; gap: 12px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.09);
 }
 .mc-login-google-v2 {
   width: 100%; height: 44px;
@@ -1223,14 +1239,14 @@ body::before {
   position: absolute;
   left: 0; right: 0; top: 50%;
   height: 1px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.12);
 }
 .mc-login-divider-text {
   position: relative;
   background: oklch(0.16 0.01 60);
   padding: 0 12px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-3);
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1251,19 +1267,19 @@ body::before {
 .mc-login-field-v2 input {
   width: 100%; height: 40px;
   padding: 0 12px 0 36px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.105);
   border-radius: 10px;
   color: #fff;
   font-size: 13px;
   font-family: var(--font-sans);
   transition: border-color 0.15s, background 0.15s;
 }
-.mc-login-field-v2 input::placeholder { color: rgba(255,255,255,0.3); }
+.mc-login-field-v2 input::placeholder { color: rgba(255,255,255,0.505); }
 .mc-login-field-v2 input:focus {
   outline: none;
   border-color: oklch(0.80 0.15 70 / 0.4);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.09);
 }
 .mc-login-field-v2:focus-within .mc-login-field-icon { color: var(--mc-accent); }
 
@@ -1301,8 +1317,8 @@ body::before {
 .mc-login-variant-picker {
   display: flex; align-items: center; gap: 4px;
   padding: 4px 4px 4px 10px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.048);
+  border: 1px solid rgba(255,255,255,0.09);
   border-radius: 999px;
   backdrop-filter: blur(12px);
 }
@@ -1321,7 +1337,7 @@ body::before {
 }
 .mc-login-variant:hover { color: var(--text-1); }
 .mc-login-variant.active {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.12);
   color: var(--text-1);
 }
 
@@ -1332,13 +1348,124 @@ body::before {
   display: flex; justify-content: center;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.56);
   letter-spacing: 0.02em;
 }
 .mc-login-credit a {
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.707);
   text-decoration: none;
   margin-left: 4px;
   transition: color 0.15s;
 }
 .mc-login-credit a:hover { color: var(--mc-accent); }
+
+/* ─── Entrenamiento · 30 Horas (mm-*) ──────────────────────────── */
+.mm-progress-card {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 14px 16px; border-radius: 12px;
+  background: var(--surface-1); border: 1px solid var(--border-1);
+}
+.mm-bar { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.mm-bar > div {
+  height: 100%; border-radius: 999px; transition: width 0.3s;
+  background: linear-gradient(90deg, var(--mc-accent), oklch(0.78 0.14 295));
+}
+.mm-how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 800px) { .mm-how { grid-template-columns: 1fr; } }
+.mm-how-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px; border-radius: 12px; background: var(--surface-1); border: 1px solid var(--border-1);
+}
+.mm-how-num {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  background: var(--mc-accent-soft); color: var(--mc-accent); border: 1px solid var(--mc-accent-border);
+}
+.mm-player {
+  border-radius: 16px; border: 1px solid var(--border-2);
+  background: var(--surface-1); overflow: hidden;
+}
+.mm-player-head { padding: 22px 24px 18px; border-bottom: 1px solid var(--border-1); }
+.mm-tag {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid;
+}
+.mm-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--bg-1); border: 1px solid var(--border-1); }
+.mm-seg button {
+  padding: 6px 12px; border-radius: 999px; border: none; background: none; cursor: pointer;
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+}
+.mm-seg button[data-on] { background: var(--surface-3); color: var(--text-1); }
+.mm-timeline { display: flex; gap: 4px; margin-top: 16px; }
+.mm-timeline button { height: 22px; padding: 7px 0; border: none; background: none; cursor: pointer; min-width: 10px; }
+.mm-timeline button > span { display: block; height: 8px; border-radius: 999px; background: var(--surface-3); transition: background 0.2s; }
+.mm-timeline button[data-state="past"] > span { background: var(--text-4); }
+.mm-blocks { list-style: none; margin: 0; padding: 8px 12px; display: flex; flex-direction: column; }
+.mm-blocks li { border-radius: 12px; }
+.mm-blocks li[data-now] { background: var(--bg-1); border: 1px solid var(--border-1); margin: 4px 0; }
+.mm-block-head {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 12px; background: none; border: none; cursor: pointer; text-align: left;
+}
+.mm-blocks li[data-past] .mm-block-head > span:nth-child(2) { color: var(--text-3) !important; }
+.mm-block-num {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center; font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  border: 1px solid var(--border-2); color: var(--text-2);
+}
+.mm-block-body { padding: 0 16px 18px 50px; }
+@media (max-width: 640px) { .mm-block-body { padding-left: 16px; } }
+.mm-goal {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 10px 13px; border-radius: 10px;
+  background: var(--mc-accent-soft); border: 1px solid var(--mc-accent-border);
+  font-size: 13.5px; color: var(--text-1); line-height: 1.5;
+}
+.mm-goal-label {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--mc-accent); flex-shrink: 0;
+}
+.mm-player-foot {
+  display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  padding: 18px 24px 22px; border-top: 1px solid var(--border-1); background: var(--bg-2);
+}
+.mm-step-btn {
+  padding: 4px 9px; border-radius: 6px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-2);
+  background: var(--surface-2); border: 1px solid var(--border-1);
+}
+.mm-ear {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 14px 16px; border-radius: 12px; background: var(--surface-1); border: 1px solid var(--border-1);
+}
+.mm-chip {
+  padding: 7px 12px; border-radius: 8px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-1);
+  background: var(--surface-2); border: 1px solid var(--border-2);
+}
+.mm-chip[data-state="ok"]  { color: oklch(0.82 0.16 145); background: oklch(0.75 0.16 145 / 0.16); border-color: oklch(0.75 0.16 145 / 0.6); }
+.mm-chip[data-state="bad"] { color: oklch(0.78 0.17 25);  background: oklch(0.68 0.18 25 / 0.14);  border-color: oklch(0.68 0.18 25 / 0.6); }
+.mm-route { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 1000px) { .mm-route { grid-template-columns: 1fr; } }
+.mm-route-col {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 14px 10px; border-radius: 14px; background: var(--surface-1); border: 1px solid var(--border-1);
+}
+.mm-route-row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 7px 6px; border-radius: 9px; border: 1px solid transparent;
+  background: none; cursor: pointer; text-align: left; transition: background 0.12s;
+}
+.mm-route-row:hover { background: var(--surface-2); }
+.mm-route-row[data-current] { background: var(--surface-2); border-color: var(--border-2); }
+.mm-route-hour {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px;
+  display: grid; place-items: center; font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  color: var(--text-2); border: 1px solid var(--border-2);
+}
+.mm-principles {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  padding: 20px 22px; border-radius: 14px; background: var(--surface-1); border: 1px solid var(--border-1);
+}
+@media (max-width: 800px) { .mm-principles { grid-template-columns: 1fr; } }

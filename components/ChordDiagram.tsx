@@ -40,9 +40,9 @@ export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", 
     <div className="flex flex-col items-center gap-2.5">
       <div className="flex items-baseline gap-2 flex-wrap justify-center">
         <span style={{ fontFamily: "var(--font-display)", fontSize: 38 * scale, color: "#fff", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1 }}>{name}</span>
-        {symbol && <span style={{ fontFamily: "var(--font-display)", fontSize: 22 * scale, color: "rgba(255,255,255,0.55)", fontStyle: "italic", lineHeight: 1 }}>{symbol}</span>}
+        {symbol && <span style={{ fontFamily: "var(--font-display)", fontSize: 22 * scale, color: "rgba(255,255,255,0.707)", fontStyle: "italic", lineHeight: 1 }}>{symbol}</span>}
         {baseFret > 5 && (
-          <span style={{ fontSize: 10 * scale, fontFamily: "var(--font-mono)", letterSpacing: "0.08em", color: "oklch(0.80 0.14 40)", background: "oklch(0.80 0.14 40 / 0.12)", border: "1px solid oklch(0.80 0.14 40 / 0.25)", borderRadius: 4, padding: "2px 6px", alignSelf: "center" }}>
+          <span style={{ fontSize: 11 * scale, fontFamily: "var(--font-mono)", letterSpacing: "0.08em", color: "oklch(0.80 0.14 40)", background: "oklch(0.80 0.14 40 / 0.12)", border: "1px solid oklch(0.80 0.14 40 / 0.25)", borderRadius: 4, padding: "2px 6px", alignSelf: "center" }}>
             AVANZADO
           </span>
         )}
@@ -51,8 +51,8 @@ export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", 
       <svg width={SW} height={SH} viewBox={`0 0 ${SW} ${SH}`} style={{ overflow: "visible" }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.7)"/>
-            <stop offset="100%" stopColor="rgba(255,255,255,0.45)"/>
+            <stop offset="0%" stopColor="rgba(255,255,255,0.8)"/>
+            <stop offset="100%" stopColor="rgba(255,255,255,0.64)"/>
           </linearGradient>
         </defs>
 
@@ -63,14 +63,14 @@ export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", 
             <g key={i}>
               {fret === 0 && (
                 <circle cx={stringX(i)} cy={TM - 14 * scale} r={6 * scale}
-                  fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={1.4 * scale}/>
+                  fill="none" stroke="rgba(255,255,255,0.707)" strokeWidth={1.4 * scale}/>
               )}
               {fret === -1 && (
                 <g>
                   <line x1={stringX(i) - 4.5*scale} y1={TM - 18*scale} x2={stringX(i) + 4.5*scale} y2={TM - 9*scale}
-                    stroke="rgba(255,255,255,0.3)" strokeWidth={1.5*scale} strokeLinecap="round"/>
+                    stroke="rgba(255,255,255,0.505)" strokeWidth={1.5*scale} strokeLinecap="round"/>
                   <line x1={stringX(i) + 4.5*scale} y1={TM - 18*scale} x2={stringX(i) - 4.5*scale} y2={TM - 9*scale}
-                    stroke="rgba(255,255,255,0.3)" strokeWidth={1.5*scale} strokeLinecap="round"/>
+                    stroke="rgba(255,255,255,0.505)" strokeWidth={1.5*scale} strokeLinecap="round"/>
                 </g>
               )}
             </g>
@@ -83,7 +83,7 @@ export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", 
             rx={2.5*scale} fill={`url(#${gradId})`} />
         ) : (
           <text x={stringX(0) - 10 * scale} y={fretY(1) - FS / 2} textAnchor="end" dominantBaseline="middle"
-            fontSize={10 * scale} fill="rgba(255,255,255,0.5)" fontWeight="500"
+            fontSize={10 * scale} fill="rgba(255,255,255,0.673)" fontWeight="500"
             style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
             {baseFret}fr
           </text>
@@ -92,13 +92,13 @@ export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", 
         {/* Fret lines */}
         {[1,2,3,4].map(row => (
           <line key={row} x1={stringX(0)} y1={fretY(row)} x2={stringX(5)} y2={fretY(row)}
-            stroke="rgba(255,255,255,0.13)" strokeWidth={1.1*scale} />
+            stroke="rgba(255,255,255,0.187)" strokeWidth={1.1*scale} />
         ))}
 
         {/* String lines */}
         {[0,1,2,3,4,5].map(i => (
           <line key={i} x1={stringX(i)} y1={TM} x2={stringX(i)} y2={fretY(4)}
-            stroke="rgba(255,255,255,0.24)" strokeWidth={(2.4 - i * 0.32) * scale} />
+            stroke="rgba(255,255,255,0.429)" strokeWidth={(2.4 - i * 0.32) * scale} />
         ))}
 
         {/* Barre */}
@@ -147,7 +147,7 @@ export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", 
               width={SS}
               height={SH}
               rx={3 * scale}
-              fill={hoveredStr === i ? "rgba(255,255,255,0.07)" : "transparent"}
+              fill={hoveredStr === i ? "rgba(255,255,255,0.105)" : "transparent"}
               style={{ cursor: "pointer" }}
               onMouseEnter={() => setHoveredStr(i)}
               onMouseLeave={() => setHoveredStr(null)}

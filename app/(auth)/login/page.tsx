@@ -67,7 +67,7 @@ export default function LoginPage() {
 
       <div className="mc-login-tag-top">
         <span className="mc-login-tag-dot" />
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgba(255,255,255,0.55)", letterSpacing: "0.08em" }}>EN VIVO · TUNING A=440</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgba(255,255,255,0.707)", letterSpacing: "0.08em" }}>EN VIVO · TUNING A=440</span>
       </div>
 
       <div className="mc-login-credit">
@@ -81,11 +81,11 @@ export default function LoginPage() {
               <defs>
                 <linearGradient id="brandStroke" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="rgba(255,255,255,0.95)"/>
-                  <stop offset="100%" stopColor="rgba(255,255,255,0.55)"/>
+                  <stop offset="100%" stopColor="rgba(255,255,255,0.707)"/>
                 </linearGradient>
               </defs>
               <path d="M7 28 Q17 4 27 28" stroke="url(#brandStroke)" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
-              <path d="M4 19 Q17 14 30 19" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+              <path d="M4 19 Q17 14 30 19" stroke="rgba(255,255,255,0.673)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
               <circle cx="17" cy="25" r="2.4" fill={DEGREE_COLORS[0]}/>
               <circle cx="17" cy="25" r="5" fill="none" stroke={DEGREE_COLORS[0]} strokeWidth="0.8" opacity={forkBeat ? 0.6 : 0.2} style={{ transition: "opacity 0.8s" }}/>
             </svg>
@@ -123,7 +123,7 @@ export default function LoginPage() {
         </button>
 
         <div className="mc-login-variant-picker">
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-3)", letterSpacing: "0.12em", marginRight: 4 }}>FONDO</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-3)", letterSpacing: "0.12em", marginRight: 4 }}>FONDO</span>
           {BG_VARIANTS.map(v => (
             <button key={v.id} type="button"
               className={`mc-login-variant ${variant === v.id ? "active" : ""}`}

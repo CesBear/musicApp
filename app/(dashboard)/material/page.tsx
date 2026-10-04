@@ -331,9 +331,9 @@ export default function MaterialPage() {
                 fontSize: 11, fontFamily: "var(--font-mono)", letterSpacing: "0.06em",
                 padding: "5px 12px", borderRadius: 20, border: "1px solid",
                 cursor: "pointer", transition: "all 0.12s",
-                background: filter === "all" ? "rgba(255,255,255,0.12)" : "transparent",
-                borderColor: filter === "all" ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.1)",
-                color: filter === "all" ? "#fff" : "rgba(255,255,255,0.4)",
+                background: filter === "all" ? "rgba(255,255,255,0.17)" : "transparent",
+                borderColor: filter === "all" ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.145)",
+                color: filter === "all" ? "#fff" : "rgba(255,255,255,0.6)",
               }}
             >
               TODOS
@@ -347,8 +347,8 @@ export default function MaterialPage() {
                   padding: "5px 12px", borderRadius: 20, border: "1px solid",
                   cursor: "pointer", transition: "all 0.12s",
                   background: filter === t.id ? t.color + "22" : "transparent",
-                  borderColor: filter === t.id ? t.color + "88" : "rgba(255,255,255,0.1)",
-                  color: filter === t.id ? t.color : "rgba(255,255,255,0.4)",
+                  borderColor: filter === t.id ? t.color + "88" : "rgba(255,255,255,0.145)",
+                  color: filter === t.id ? t.color : "rgba(255,255,255,0.6)",
                 }}
               >
                 {t.area.toUpperCase()}
@@ -403,7 +403,7 @@ export default function MaterialPage() {
                       <div style={{
                         position: "absolute", bottom: 6, right: 6,
                         background: "rgba(0,0,0,0.65)", borderRadius: 6,
-                        fontSize: 10, fontFamily: "var(--font-mono)",
+                        fontSize: 11, fontFamily: "var(--font-mono)",
                         color: "#fff", padding: "2px 7px",
                       }}>
                         +{entry.archivos.length - 1}
@@ -419,7 +419,7 @@ export default function MaterialPage() {
                         background: area.color, flexShrink: 0,
                       }} />
                       <span style={{
-                        fontSize: 9, color: area.color, fontFamily: "var(--font-mono)",
+                        fontSize: 10.5, color: area.color, fontFamily: "var(--font-mono)",
                         letterSpacing: "0.08em", textTransform: "uppercase",
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                       }}>
@@ -435,7 +435,7 @@ export default function MaterialPage() {
                       {entry.titulo}
                     </p>
                     <p style={{
-                      fontSize: 10, color: "rgba(255,255,255,0.3)",
+                      fontSize: 11, color: "rgba(255,255,255,0.505)",
                       fontFamily: "var(--font-mono)", margin: 0,
                     }}>
                       {entry.fechaDisplay}
@@ -480,14 +480,14 @@ export default function MaterialPage() {
                   <div style={{ padding: "12px 14px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#f87171" }} />
-                      <span style={{ fontSize: 9, color: "#f87171", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
+                      <span style={{ fontSize: 10.5, color: "#f87171", fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
                         DOCUMENTO
                       </span>
                     </div>
                     <p style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)", margin: 0 }}>
                       Regiones Tonales
                     </p>
-                    <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-mono)", margin: 0 }}>
+                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.505)", fontFamily: "var(--font-mono)", margin: 0 }}>
                       abrir PDF ↗
                     </p>
                   </div>
@@ -502,11 +502,11 @@ export default function MaterialPage() {
       {tab === "lecciones" && (
         loading ? (
           <div className="mc-info-card mc-info-card-quiet" style={{ textAlign: "center", padding: 40 }}>
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Cargando...</p>
+            <p style={{ color: "rgba(255,255,255,0.505)", fontSize: 13 }}>Cargando...</p>
           </div>
         ) : lessons.length === 0 ? (
           <div className="mc-info-card mc-info-card-quiet" style={{ textAlign: "center", padding: 48 }}>
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>No hay lecciones todavía.</p>
+            <p style={{ color: "rgba(255,255,255,0.505)", fontSize: 13 }}>No hay lecciones todavía.</p>
             <button className="mc-play-btn" style={{ marginTop: 16 }} onClick={() => setTab("nueva")}>
               Agregar primera lección
             </button>
@@ -522,16 +522,16 @@ export default function MaterialPage() {
                       ? <span className="mc-lesson-current">EN CURSO</span>
                       : l.status === "done"
                       ? <span className="mc-lesson-done">✓</span>
-                      : <span style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontFamily: "var(--font-mono)" }}>PENDIENTE</span>}
+                      : <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.343)", fontFamily: "var(--font-mono)" }}>PENDIENTE</span>}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}>
+                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.56)", fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}>
                       {l.week.toUpperCase()} · {l.date}
                     </p>
                     <p style={{ fontSize: 13.5, fontWeight: 600, color: "rgba(255,255,255,0.92)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {l.title}
                     </p>
-                    {l.focus && <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.42)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.focus}</p>}
+                    {l.focus && <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.616)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.focus}</p>}
                   </div>
                 </button>
               ))}
@@ -546,7 +546,7 @@ export default function MaterialPage() {
                     <h2 style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 36, lineHeight: 1.1, color: "#fff", margin: "6px 0 4px", letterSpacing: "-0.02em" }}>
                       {selected.title}
                     </h2>
-                    {selected.focus && <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, margin: 0 }}>{selected.focus}</p>}
+                    {selected.focus && <p style={{ color: "rgba(255,255,255,0.673)", fontSize: 14, margin: 0 }}>{selected.focus}</p>}
                   </div>
                   <div className="mc-lesson-meta">
                     <span className="mc-mono-tag">{selected.duration}</span>
@@ -562,7 +562,7 @@ export default function MaterialPage() {
                           <div className={`mc-material-icon mc-material-${m.kind}`}>{KIND_ICON[m.kind]}</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ fontSize: 13, color: "#fff", fontWeight: 500, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.label}</p>
-                            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-mono)", margin: "3px 0 0" }}>
+                            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.56)", fontFamily: "var(--font-mono)", margin: "3px 0 0" }}>
                               {[m.size, m.duration].filter(Boolean).join(" · ")}
                             </p>
                           </div>
@@ -621,7 +621,7 @@ export default function MaterialPage() {
                   value={(form as Record<string, string>)[key]}
                   onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))}
                   style={{
-                    width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                    width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.145)",
                     borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13,
                     fontFamily: "var(--font-sans)", outline: "none",
                   }}
@@ -634,7 +634,7 @@ export default function MaterialPage() {
                 value={form.notes} onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
                 rows={4}
                 style={{
-                  width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                  width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.145)",
                   borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 13,
                   fontFamily: "var(--font-sans)", outline: "none", resize: "vertical",
                 }}
@@ -676,8 +676,8 @@ export default function MaterialPage() {
             <div
               onClick={e => e.stopPropagation()}
               style={{
-                background: "oklch(0.19 0.006 60)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "oklch(0.24 0.008 60)",
+                border: "1px solid rgba(255,255,255,0.145)",
                 borderRadius: 20, width: "100%", maxWidth: 680,
                 maxHeight: "90vh", overflowY: "auto",
                 display: "flex", flexDirection: "column",
@@ -686,16 +686,16 @@ export default function MaterialPage() {
               {/* Modal header */}
               <div style={{
                 padding: "20px 24px 18px",
-                borderBottom: "1px solid rgba(255,255,255,0.07)",
+                borderBottom: "1px solid rgba(255,255,255,0.105)",
                 display: "flex", alignItems: "flex-start", gap: 12,
                 position: "sticky", top: 0,
-                background: "oklch(0.19 0.006 60)",
+                background: "oklch(0.24 0.008 60)",
                 zIndex: 1,
               }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: area.color }} />
-                    <span style={{ fontSize: 10, color: area.color, fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
+                    <span style={{ fontSize: 11, color: area.color, fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
                       {area.area.toUpperCase()} · {modal.fechaDisplay.toUpperCase()}
                     </span>
                   </div>
@@ -709,9 +709,9 @@ export default function MaterialPage() {
                 <button
                   onClick={closeModal}
                   style={{
-                    background: "rgba(255,255,255,0.07)", border: "none",
+                    background: "rgba(255,255,255,0.105)", border: "none",
                     borderRadius: 8, width: 32, height: 32, cursor: "pointer",
-                    color: "rgba(255,255,255,0.5)", fontSize: 16, flexShrink: 0,
+                    color: "rgba(255,255,255,0.673)", fontSize: 16, flexShrink: 0,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}
                 >
@@ -721,7 +721,7 @@ export default function MaterialPage() {
 
               {/* Modal body */}
               <div style={{ padding: "20px 24px 28px", display: "flex", flexDirection: "column", gap: 20 }}>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", margin: 0, lineHeight: 1.65 }}>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.74)", margin: 0, lineHeight: 1.65 }}>
                   {modal.descripcion}
                 </p>
 
@@ -730,7 +730,7 @@ export default function MaterialPage() {
                   <img
                     src={`/clases/${modal.archivos[0]}`}
                     alt={modal.titulo}
-                    style={{ width: "100%", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "#fff" }}
+                    style={{ width: "100%", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "#fff" }}
                   />
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -739,7 +739,7 @@ export default function MaterialPage() {
                       <img
                         src={`/clases/${modal.archivos[imgIndex]}`}
                         alt={modal.titulo}
-                        style={{ width: "100%", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "#fff", display: "block" }}
+                        style={{ width: "100%", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "#fff", display: "block" }}
                       />
                       {/* Nav arrows */}
                       {imgIndex > 0 && (
@@ -764,7 +764,7 @@ export default function MaterialPage() {
                       {modal.archivos.map((f, idx) => (
                         <button key={f} onClick={() => setImgIndex(idx)} style={{
                           width: 56, height: 42, borderRadius: 8, overflow: "hidden",
-                          border: `2px solid ${idx === imgIndex ? area.color : "rgba(255,255,255,0.1)"}`,
+                          border: `2px solid ${idx === imgIndex ? area.color : "rgba(255,255,255,0.145)"}`,
                           cursor: "pointer", background: "#fff", padding: 0, flexShrink: 0,
                           transition: "border-color 0.12s",
                         }}>

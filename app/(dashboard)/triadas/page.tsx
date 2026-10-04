@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import FretboardNeck from "@/components/FretboardNeck"
 import { NOTE_NAMES, GUITAR_TUNING, DEGREE_COLORS } from "@/data/scales"
 
 // ─── Music theory types ──────────────────────────────────────────────────────
@@ -96,161 +97,63 @@ function findShapes(root: number, intervals: [number, number, number], strings: 
 
 // ─── Triad Neck SVG ──────────────────────────────────────────────────────────
 
-const NUM_FRETS = 22
-const FW = 50
-const SS = 36   // spacing for 6 strings
-const LM = 28
-const TM = 22
-const BM = 34
-const LW = 26
-const R  = 12
-
-const W = LW + LM + NUM_FRETS * FW + 12
-const H = TM + 5 * SS + BM   // 6 strings
-
-const SINGLE_DOTS = [3, 5, 7, 9, 15, 17, 19, 21]
-const DOUBLE_DOT  = 12
-const STRING_WIDTHS = [2.6, 2.1, 1.7, 1.3, 1.0, 0.85]
+const R = 12.5
 
 function TriadNeck({ shapes, strings, root }: {
   shapes: TriadShape[]
   strings: [number, number, number]
   root: number
 }) {
-  const activeSet = new Set(strings)
-
-  // Standard tab orientation: string index 5 (e) at top, 0 (E) at bottom
-  const sx = (fret: number) => LW + LM + fret * FW
-  const sy = (str: number)  => TM + (5 - str) * SS
-
   return (
-    <div className="mc-fretboard-wrap" style={{ overflowX: "auto" }}>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ minWidth: W, display: "block" }}>
-        <defs>
-          <linearGradient id="triNut" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.32)"/>
-            <stop offset="100%" stopColor="rgba(255,255,255,0.18)"/>
-          </linearGradient>
-        </defs>
+    <FretboardNeck numFrets={22} activeStrings={new Set(strings)}>
+      {({ sy, noteX, noteShadow }) => shapes.map(shape => {
+        const color = INV_COLORS[shape.inversion]
+        const sorted = [...shape.strings].sort((a, b) => a - b) as [number, number, number]
 
-        {/* String labels — all 6 */}
-        {[0,1,2,3,4,5].map(s => {
-          const isActive = activeSet.has(s)
-          return (
-            <text key={s} x={LW / 2} y={sy(s)} textAnchor="middle" dominantBaseline="middle"
-              fontSize={10} fontWeight="600"
-              fill={isActive ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.18)"}
-              style={{ fontFamily: "var(--font-mono)" }}>
-              {STRING_LABELS[s]}
+        const xs = sorted.map((_, i) => noteX(shape.frets[i]))
+        const ys = sorted.map(s => sy(s))
+
+        // Conector vertical punteado entre las tres notas de la forma
+        const minY  = Math.min(...ys)
+        const maxY  = Math.max(...ys)
+        const lineX = (Math.min(...xs) + Math.max(...xs)) / 2
+
+        return (
+          <g key={shape.id}>
+            <line x1={lineX} y1={minY} x2={lineX} y2={maxY}
+              stroke={color} strokeWidth={1.5} opacity={0.5} strokeDasharray="3 2" />
+
+            {sorted.map((s, i) => {
+              const x = xs[i]
+              const y = ys[i]
+              const isRoot = shape.notes[i] === (root % 12)
+              return (
+                <g key={s}>
+                  {isRoot && (
+                    <circle cx={x} cy={y} r={R + 3} fill="none"
+                      stroke={color} strokeWidth={1.4} opacity={0.75} />
+                  )}
+                  <circle cx={x} cy={y} r={R} fill={color} filter={`url(#${noteShadow})`} />
+                  <text x={x} y={y + 0.5} textAnchor="middle" dominantBaseline="middle"
+                    fontSize={NOTE_NAMES[shape.notes[i]].length > 1 ? 9 : 10.5}
+                    fontWeight="700" fill="#0a0806"
+                    style={{ fontFamily: "var(--font-mono)", pointerEvents: "none", userSelect: "none" }}>
+                    {NOTE_NAMES[shape.notes[i]]}
+                  </text>
+                </g>
+              )
+            })}
+
+            {/* Badge de inversión sobre la nota superior */}
+            <text x={xs[sorted.length - 1]} y={minY - R - 6}
+              textAnchor="middle" fontSize={10} fontWeight="700" fill={color}
+              style={{ fontFamily: "var(--font-mono)", pointerEvents: "none" }}>
+              {INV_LABELS[shape.inversion]}
             </text>
-          )
-        })}
-
-        {/* Nut */}
-        <rect x={LW + LM - 5} y={TM - SS * 0.4} width={5}
-          height={5 * SS + SS * 0.8} rx={2.5} fill="url(#triNut)" />
-
-        {/* Fret lines */}
-        {Array.from({ length: NUM_FRETS }).map((_, f) => {
-          const isOct = f + 1 === 12
-          return (
-            <line key={f}
-              x1={sx(f+1)} y1={TM - SS * 0.36}
-              x2={sx(f+1)} y2={sy(0) + SS * 0.36}
-              stroke={isOct ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.05)"}
-              strokeWidth={isOct ? 1.5 : 1} />
-          )
-        })}
-
-        {/* String lines — all 6, active ones brighter */}
-        {[0,1,2,3,4,5].map(s => {
-          const isActive = activeSet.has(s)
-          return (
-            <line key={s}
-              x1={LW + LM} y1={sy(s)} x2={sx(NUM_FRETS)} y2={sy(s)}
-              stroke={isActive ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.04)"}
-              strokeWidth={isActive ? STRING_WIDTHS[s] : 0.6} />
-          )
-        })}
-
-        {/* Inlays */}
-        {SINGLE_DOTS.filter(f => f <= NUM_FRETS).map(f => (
-          <circle key={f} cx={sx(f) - FW/2} cy={TM + 2.5 * SS} r={3.5} fill="rgba(255,255,255,0.09)" />
-        ))}
-        {DOUBLE_DOT <= NUM_FRETS && (
-          <>
-            <circle cx={sx(DOUBLE_DOT) - FW/2} cy={TM + 1.5 * SS} r={3.5} fill="rgba(255,255,255,0.13)" />
-            <circle cx={sx(DOUBLE_DOT) - FW/2} cy={TM + 3.5 * SS} r={3.5} fill="rgba(255,255,255,0.13)" />
-          </>
-        )}
-
-        {/* Fret numbers */}
-        {[3,5,7,9,12,15,17,19,21].filter(f => f <= NUM_FRETS).map(f => (
-          <text key={f} x={sx(f) - FW/2} y={H - 12} textAnchor="middle"
-            fontSize={9} fill={f === 12 ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.22)"}
-            fontWeight={f === 12 ? "700" : "400"}
-            style={{ fontFamily: "var(--font-mono)" }}>
-            {f}
-          </text>
-        ))}
-
-        {/* Triad shapes — only on active strings */}
-        {shapes.map(shape => {
-          const color = INV_COLORS[shape.inversion]
-          const sorted = [...shape.strings].sort((a, b) => a - b) as [number,number,number]
-
-          // xs and ys for each string in sorted order
-          const xs = sorted.map((_, i) => {
-            const f = shape.frets[i]
-            return f === 0 ? LW + LM - FW * 0.5 : sx(f) - FW / 2
-          })
-          const ys = sorted.map(s => sy(s))
-
-          // Thin vertical connector line (no fill rect)
-          const minY = Math.min(...ys)
-          const maxY = Math.max(...ys)
-          const lineX = (Math.min(...xs) + Math.max(...xs)) / 2
-
-          return (
-            <g key={shape.id}>
-              {/* Connector line */}
-              <line x1={lineX} y1={minY} x2={lineX} y2={maxY}
-                stroke={color} strokeWidth={1.5} opacity={0.25} strokeDasharray="3 2" />
-
-              {/* Note circles */}
-              {sorted.map((s, i) => {
-                const x = xs[i]
-                const y = ys[i]
-                const isRoot = shape.notes[i] === (root % 12)
-                return (
-                  <g key={s}>
-                    {isRoot && (
-                      <circle cx={x} cy={y} r={R + 3} fill="none"
-                        stroke={color} strokeWidth={1.2} opacity={0.5} />
-                    )}
-                    <circle cx={x} cy={y} r={R} fill={color} />
-                    <text x={x} y={y + 0.5} textAnchor="middle" dominantBaseline="middle"
-                      fontSize={NOTE_NAMES[shape.notes[i]].length > 1 ? 7.5 : 9.5}
-                      fontWeight="700" fill="#0a0806"
-                      style={{ fontFamily: "var(--font-mono)", pointerEvents: "none", userSelect: "none" }}>
-                      {NOTE_NAMES[shape.notes[i]]}
-                    </text>
-                  </g>
-                )
-              })}
-
-              {/* Inversion badge above the top note */}
-              <text x={xs[sorted.length - 1]} y={minY - R - 5}
-                textAnchor="middle" fontSize={8} fontWeight="700"
-                fill={color} opacity={0.8}
-                style={{ fontFamily: "var(--font-mono)", pointerEvents: "none" }}>
-                {INV_LABELS[shape.inversion]}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
-    </div>
+          </g>
+        )
+      })}
+    </FretboardNeck>
   )
 }
 
@@ -332,9 +235,9 @@ export default function TriadasPage() {
         {quality === "aug" && (
           <div className="mc-info-card mc-info-card-quiet" style={{ marginTop: 12 }}>
             <p className="mc-info-label">Tríada simétrica</p>
-            <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginTop: 6 }}>
-              La tríada aumentada está formada por <strong style={{ color: "rgba(255,255,255,0.8)" }}>3 terceras mayores iguales</strong> (4+4+4 semitonos).
-              Esto hace que <strong style={{ color: "rgba(255,255,255,0.8)" }}>C+, E+ y Ab+</strong> contengan exactamente las mismas notas.
+            <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.673)", lineHeight: 1.6, marginTop: 6 }}>
+              La tríada aumentada está formada por <strong style={{ color: "rgba(255,255,255,0.86)" }}>3 terceras mayores iguales</strong> (4+4+4 semitonos).
+              Esto hace que <strong style={{ color: "rgba(255,255,255,0.86)" }}>C+, E+ y Ab+</strong> contengan exactamente las mismas notas.
               Todas sus inversiones tienen la misma forma geométrica en el mástil — solo cambia el traste de inicio.
             </p>
           </div>
@@ -342,9 +245,9 @@ export default function TriadasPage() {
         {quality === "dim" && (
           <div className="mc-info-card mc-info-card-quiet" style={{ marginTop: 12 }}>
             <p className="mc-info-label">Tríada simétrica</p>
-            <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginTop: 6 }}>
-              La tríada disminuida está formada por <strong style={{ color: "rgba(255,255,255,0.8)" }}>2 terceras menores apiladas</strong> (3+3 semitonos).
-              Esto hace que <strong style={{ color: "rgba(255,255,255,0.8)" }}>C°, Eb° y F#°</strong> contengan las mismas notas.
+            <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.673)", lineHeight: 1.6, marginTop: 6 }}>
+              La tríada disminuida está formada por <strong style={{ color: "rgba(255,255,255,0.86)" }}>2 terceras menores apiladas</strong> (3+3 semitonos).
+              Esto hace que <strong style={{ color: "rgba(255,255,255,0.86)" }}>C°, Eb° y F#°</strong> contengan las mismas notas.
               La nota raíz que elijas determina cuál es la inversión, pero los shapes en el mástil se repiten cada 3 trastes.
             </p>
           </div>
@@ -385,12 +288,12 @@ export default function TriadasPage() {
                 width: 28, height: 28, borderRadius: 14,
                 background: INV_COLORS[inv],
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 10, fontWeight: 700, color: "#0a0806",
+                fontSize: 11, fontWeight: 700, color: "#0a0806",
                 fontFamily: "var(--font-mono)",
               }}>
                 {INV_LABELS[inv]}
               </div>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.64)" }}>
                 {INV_NAMES[inv]}
               </span>
             </div>
@@ -430,7 +333,7 @@ export default function TriadasPage() {
                       <span style={{ color: INV_COLORS[s.inversion], fontFamily: "var(--font-mono)", fontWeight: 700 }}>
                         {INV_LABELS[s.inversion]}
                       </span>
-                      <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginLeft: 8 }}>
+                      <span style={{ color: "rgba(255,255,255,0.56)", fontSize: 11, marginLeft: 8 }}>
                         {["Raíz","3ra","5ta"][s.inversion]} en bajo
                       </span>
                     </td>
@@ -439,13 +342,13 @@ export default function TriadasPage() {
                         <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
                           {fret(str)}
                         </span>
-                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginLeft: 6 }}>
+                        <span style={{ color: "rgba(255,255,255,0.505)", fontSize: 11, marginLeft: 6 }}>
                           {NOTE_NAMES[s.notes[sorted.indexOf(str)]]}
                         </span>
                       </td>
                     ))}
                     <td>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(255,255,255,0.74)" }}>
                         {[...new Set(s.notes.map(n => NOTE_NAMES[n]))].join(" · ")}
                       </span>
                     </td>
