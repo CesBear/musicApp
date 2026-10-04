@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from "react"
-import { playTone, getAudioTime } from "@/lib/audio"
+import { playTone } from "@/lib/audio"
 import { getPracticeSessions, addPracticeSession, deletePracticeSession, type PracticeSession } from "@/lib/storage"
 import Metronome from "@/components/Metronome"
 import TabDiagram, { type TabExercise } from "@/components/TabDiagram"
@@ -26,10 +26,10 @@ const savedLen = (): 60 | 30 => {
 
 const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.max(0, Math.floor(sec % 60))).padStart(2, "0")}`
 
+// playTone recibe tiempo relativo (segundos desde ahora), no la hora del reloj de audio
 function chime(last: boolean) {
-  const t0 = getAudioTime()
-  playTone(76, t0 + 0.02, 0.4, 0.12)
-  playTone(last ? 84 : 83, t0 + 0.22, 0.6, 0.12)
+  playTone(76, 0.02, 0.4, 0.12)
+  playTone(last ? 84 : 83, 0.22, 0.6, 0.12)
 }
 
 // ─── Entrenador de intervalos (con el subconjunto de cada nivel) ─────────────
@@ -42,9 +42,8 @@ function EarTrainer({ pool }: { pool: number[] }) {
 
   const playInterval = (semi: number) => {
     const root = 55 + Math.floor(Math.random() * 8)
-    const t0 = getAudioTime()
-    playTone(root, t0 + 0.02, 0.55, 0.16)
-    playTone(root + semi, t0 + 0.75, 0.55, 0.16)
+    playTone(root, 0.02, 0.55, 0.16)
+    playTone(root + semi, 0.75, 0.55, 0.16)
     rootRef.current = root
   }
 
@@ -62,9 +61,8 @@ function EarTrainer({ pool }: { pool: number[] }) {
 
   const replay = () => {
     if (target === null) return
-    const t0 = getAudioTime()
-    playTone(rootRef.current, t0 + 0.02, 0.55, 0.16)
-    playTone(rootRef.current + target, t0 + 0.75, 0.55, 0.16)
+    playTone(rootRef.current, 0.02, 0.55, 0.16)
+    playTone(rootRef.current + target, 0.75, 0.55, 0.16)
   }
 
   return (
