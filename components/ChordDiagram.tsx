@@ -11,9 +11,10 @@ interface Props {
   size?: "xs" | "sm" | "md" | "lg"
   onPlay?: () => void
   onStringPlay?: (stringIdx: number, fret: number) => void
+  hideLevel?: boolean   // oculta la etiqueta "AVANZADO" de los acordes altos en el mástil
 }
 
-export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", onPlay, onStringPlay }: Props) {
+export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", onPlay, onStringPlay, hideLevel = false }: Props) {
   const [hoveredStr, setHoveredStr] = useState<number | null>(null)
   const scale = size === "xs" ? 0.54 : size === "sm" ? 0.7 : size === "md" ? 0.88 : 1.05
   const SW = 150 * scale
@@ -29,7 +30,9 @@ export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", 
 
   const activeFrets = voicing.frets.filter(f => f > 0)
   const minFret = activeFrets.length > 0 ? Math.min(...activeFrets) : 1
-  const baseFret = minFret <= 4 ? 1 : minFret
+  const maxFret = activeFrets.length > 0 ? Math.max(...activeFrets) : 1
+  // Desde la cejuela solo si todo cabe en los trastes 1–4; si no, la ventana empieza en el traste más bajo
+  const baseFret = maxFret <= 4 ? 1 : minFret
   const showFretNum = baseFret > 1
   const relFret = (abs: number) => abs - baseFret + 1
 
@@ -41,7 +44,7 @@ export default function ChordDiagram({ voicing, name, symbol = "", size = "lg", 
       <div className="flex items-baseline gap-2 flex-wrap justify-center">
         <span style={{ fontFamily: "var(--font-display)", fontSize: 38 * scale, color: "#fff", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1 }}>{name}</span>
         {symbol && <span style={{ fontFamily: "var(--font-display)", fontSize: 22 * scale, color: "rgba(255,255,255,0.707)", fontStyle: "italic", lineHeight: 1 }}>{symbol}</span>}
-        {baseFret > 5 && (
+        {baseFret > 5 && !hideLevel && (
           <span style={{ fontSize: 11 * scale, fontFamily: "var(--font-mono)", letterSpacing: "0.08em", color: "oklch(0.80 0.14 40)", background: "oklch(0.80 0.14 40 / 0.12)", border: "1px solid oklch(0.80 0.14 40 / 0.25)", borderRadius: 4, padding: "2px 6px", alignSelf: "center" }}>
             AVANZADO
           </span>

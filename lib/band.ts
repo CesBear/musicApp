@@ -59,6 +59,8 @@ const BY_PATTERN: Record<string, string> = {
   negras: "basico", corcheas: "basico", balada: "balada", "bajo-acorde": "country", vals: "vals",
   pop: "pop", pop16: "pop16", "seis-octavos": "seis8", rock: "rock", shuffle: "shuffle",
   "funk-16": "funk", disco: "disco", "kiko-scratch": "funk", "kiko-stabs": "disco",
+  "kiko-aproximacion": "funk", "kiko-251": "disco", "kiko-descenso": "pop16", "kiko-13": "funk",
+  "kiko-backbeat": "disco", "kiko-terceras": "funk", "kiko-octavas": "funk",
   rumba: "rumba", cumbia: "cumbia", bolero: "bolero", bossa: "bossa", reggaeton: "dembow",
   "vals-ranchero": "vals", polka: "polka", huapango: "huapango",
   folk: "pop", country: "country", tren: "tren", "vals-country": "vals",

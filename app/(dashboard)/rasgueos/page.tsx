@@ -2,14 +2,19 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { playMetronomeClick, getAudioTime, getVisualLatencyMs } from "@/lib/audio"
-import { playStroke, progressionOf } from "@/lib/rhythmAudio"
+import { playStroke, progressionOf, chordAt } from "@/lib/rhythmAudio"
+import ChordDiagram from "@/components/ChordDiagram"
+import { playChord } from "@/lib/audio"
 import { grooveFor, playBandStep, bassRoot, setBandVolume } from "@/lib/band"
 import Metronome from "@/components/Metronome"
 
 import {
-  CATEGORIES, THEORY, GENRE_GUIDE, ALL_PATTERNS, categoryOf,
+  CATEGORIES, THEORY, GENRE_GUIDE, ALL_PATTERNS, OPEN_CHORDS, STYLE_VOICINGS, categoryOf,
   type Stroke, type StrumPattern,
 } from "@/data/rhythms"
+
+// "Em7·" → "Em7" (el punto solo distingue el voicing movible del abierto en los datos)
+const chordLabel = (name: string) => name.replace("·", "").replace(/^3ª/, "3ª ").replace(/^8va/, "8va ")
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -321,6 +326,35 @@ export default function RasgeosPage() {
         </div>
       )}
 
+      {/* Técnicas y voicings del estilo */}
+      {category?.lessons && (
+        <div className="rz-guide">
+          {category.lessons.map(l => (
+            <div key={l.title} className="rz-lesson" style={{ gap: 6 }}>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: 18, color: "#fff" }}>{l.title}</span>
+              <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-1)", lineHeight: 1.55 }}>{l.body}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {category?.voicings && (
+        <div className="mc-section">
+          <div className="mc-section-head" style={{ justifyContent: "flex-start", gap: 10 }}>
+            <span className="mc-eyebrow">Voicings del estilo</span>
+            <span className="mc-section-hint">toca un diagrama para escucharlo</span>
+          </div>
+          <div className="rz-voicings">
+            {category.voicings.map(v => (
+              <div key={v} className="rz-voicing">
+                <ChordDiagram voicing={{ frets: OPEN_CHORDS[v], fingers: STYLE_VOICINGS[v]?.fingers ?? [] }}
+                  name={chordLabel(v)} size="sm" hideLevel onPlay={() => playChord(OPEN_CHORDS[v])} />
+                <span style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.4, textAlign: "center" }}>{STYLE_VOICINGS[v]?.role}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Pattern cards */}
       {category && (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8 }}>
@@ -367,7 +401,7 @@ export default function RasgeosPage() {
                 </span>
               </div>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(255,255,255,0.505)", letterSpacing: "0.05em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {progressionOf(p).join(" · ")}
+                {progressionOf(p).map(chordLabel).join(" · ")}
               </span>
             </button>
           )
@@ -403,7 +437,7 @@ export default function RasgeosPage() {
                 color: active ? ACCENT : "rgba(255,255,255,0.83)",
                 transition: "all 0.1s",
               }}>
-                {name}
+                {chordLabel(name)}
               </span>
             )
           })}
@@ -462,6 +496,18 @@ export default function RasgeosPage() {
                         {strokeGlyph(stroke)}
                       </span>
                     </div>
+                    {(() => {
+                      // Qué acorde suena distinto en este golpe: riff, anticipación o aproximación
+                      if (stroke === "-" || stroke === "x") return null
+                      const special = pattern.stepChords?.[i] ?? (pattern.push?.includes(i) ? `→${chordAt(pattern, i, (activeBar < 0 ? 0 : activeBar))}` : null)
+                      const appr = pattern.approach?.includes(i)
+                      if (!special && !appr) return null
+                      return (
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: appr ? BASS_C : ACCENT, whiteSpace: "nowrap" }}>
+                          {appr ? "½↓" : chordLabel(special!)}
+                        </span>
+                      )
+                    })()}
                   </div>
                 )
               })}

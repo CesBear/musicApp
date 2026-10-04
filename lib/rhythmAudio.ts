@@ -51,6 +51,14 @@ function playPinch(rel: number, subDur: number, chord: string, frets: number[]) 
   })
 }
 
+/** Acorde que suena en el golpe s del compás barIdx (riff propio, anticipación o el del compás). */
+export function chordAt(pat: StrumPattern, s: number, barIdx: number): string {
+  const names = pat.chords ?? ["E"]
+  if (pat.stepChords?.[s]) return pat.stepChords[s]
+  if (pat.push?.includes(s)) return names[(barIdx + 1) % names.length]
+  return names[barIdx % names.length]
+}
+
 export function progressionOf(pat: StrumPattern): string[] {
   if (pat.voice === "chug") return (pat.powerRoots ?? [40]).map(r => POWER_NAME[r] ?? "E5")
   return pat.chords ?? ["E"]
@@ -80,9 +88,10 @@ export function playStroke(pat: StrumPattern, s: number, barIdx: number, absWhen
     return
   }
 
-  const names = pat.chords ?? ["E"]
-  const name  = names[barIdx % names.length]
-  const frets = OPEN_CHORDS[name] ?? OPEN_CHORDS.E
+  const name  = chordAt(pat, s, barIdx)
+  let frets   = OPEN_CHORDS[name] ?? OPEN_CHORDS.E
+  // Aproximación cromática: la misma forma un traste abajo (solo voicings movibles)
+  if (pat.approach?.includes(s)) frets = frets.map(f => f <= 0 ? f : f - 1)
   const st = !!pat.staccato
   switch (stroke) {
     case "D": playDown(absWhen, now, subDur, frets, 1, st); break
