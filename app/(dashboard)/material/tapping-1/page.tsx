@@ -13,7 +13,7 @@ export default function Tapping1Page() {
         <div>
           <div className="mc-eyebrow"><a href="/material" style={{ color: "inherit" }}>Material</a> · Técnica · Clase del 5 oct 2026</div>
           <h1 className="mc-h1">Tapping 1</h1>
-          <p className="mc-lede">Tapping Shredmaster Class · Secretos del Shred. Los 12 ejercicios de la hoja, para escucharlos y practicarlos a tu tempo hasta llegar a ♩ = 120.</p>
+          <p className="mc-lede">Tapping Shredmaster Class · Secretos del Shred. Los 12 ejercicios de la hoja (más la línea de Kotzen completa), para escucharlos y practicarlos a tu tempo hasta llegar a ♩ = 120.</p>
         </div>
         <div className="mc-hero-aside" style={{ minWidth: 0 }}>
           <a href="/clases/tapping-1-shredmaster.pdf" target="_blank" rel="noopener noreferrer" className="mc-btn-ghost" style={{ textDecoration: "none", justifyContent: "center" }}>Abrir la hoja original (PDF)</a>

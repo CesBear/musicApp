@@ -106,7 +106,7 @@ test("Tapping 1: los ejercicios de la clase suenan y Material enlaza a la práct
   await expect(page.getByRole("link", { name: /Practicar con audio/ })).toBeVisible()
   await expect(page.getByRole("link", { name: /PDF original/ })).toHaveAttribute("href", "/clases/tapping-1-shredmaster.pdf")
   await page.goto("/material/tapping-1", { waitUntil: "networkidle" })
-  await expect(page.locator(".sf-lesson")).toHaveCount(12)
+  await expect(page.locator(".sf-lesson")).toHaveCount(13)
   const play = page.getByRole("button", { name: /TOCAR/ }).first()
   await play.click(); await page.waitForTimeout(3500); await page.getByRole("button", { name: /PARAR/ }).first().click()
   await resetStarts(page)

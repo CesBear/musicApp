@@ -139,6 +139,19 @@ export const TAPPING_1: ClassExercise[] = [
     },
   },
   {
+    letter: "RK+", goal: "Llegar a la 6ª cuerda sin cortar el legato y cerrar en La.",
+    exercise: {
+      id: "tap1-kotzen-full", title: "Línea a la Richie Kotzen · completa (continuación propuesta)", bpmHint: 50, subdivision: 3, beatsPerGroup: 12, timeSignature: "4/4",
+      desc: "La hoja termina en «…» en la 3ª cuerda. Aquí sigue el mismo patrón por la 4ª, 5ª y 6ª (bajar, subir, tap en el 17, bajar) y cierra con un slide a La, la tónica. La continuación es nuestra, no de la hoja.",
+      steps: [
+        ...steps(([[5, 13, 10, 12], [4, 13, 10, 12], [3, 12, 9, 10], [2, 12, 9, 10], [1, 12, 8, 10], [0, 12, 8, 10]] as const).flatMap(([str, top, low, mid]): N[] => [
+          [str, top], [str, mid, "p"], [str, low, "p"], [str, mid, "h"], [str, top, "h"], [str, 17, "t"], [str, top, "p"], [str, mid, "p"], [str, low, "p"],
+        ])),
+        { notes: [{ string: 0, fret: 5 }], tie: "s" }, { notes: [] }, { notes: [] }, { notes: [] }, { notes: [] }, { notes: [] },
+      ],
+    },
+  },
+  {
     letter: "I", goal: "Hammer-ons de subida y pull-offs de bajada con el mismo volumen.",
     exercise: {
       id: "tap1-i", title: "I · Tres notas por cuerda + tap (graves)", bpmHint: 55, subdivision: 3, beatsPerGroup: 24, timeSignature: "8/4",

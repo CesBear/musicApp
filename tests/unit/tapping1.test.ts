@@ -37,3 +37,17 @@ describe("Tapping 1 — transcripción de la hoja de clase", () => {
     }
   })
 })
+
+describe("Kotzen completa (continuación propuesta)", () => {
+  it("empieza igual que la hoja", () => {
+    expect(notes("RK+").slice(0, 24)).toEqual(notes("RK"))
+  })
+  it("sigue el patrón por la 4ª, 5ª y 6ª cuerda y cierra en La", () => {
+    const n = notes("RK+")
+    expect(n.slice(27, 36).join(" ")).toBe("D4 C4 B3 C4 D4 G4 D4 C4 B3")   // 4ª cuerda
+    expect(n.slice(36, 45).join(" ")).toBe("A3 G3 F3 G3 A3 D4 A3 G3 F3")   // 5ª
+    expect(n.slice(45, 54).join(" ")).toBe("E3 D3 C3 D3 E3 A3 E3 D3 C3")   // 6ª
+    expect(n[n.length - 1]).toBe("A2")                                     // tónica
+    expect(n.filter(x => x.includes("#"))).toEqual([])                     // todo en La menor / Do mayor
+  })
+})
