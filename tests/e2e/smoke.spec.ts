@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test"
 import { instrument } from "./helpers"
 
 const ROUTES = ["/escalas", "/triadas", "/circulo-quintas", "/chord-builder", "/progresiones", "/rasgueos",
-  "/solfeo", "/entrenamiento", "/lector", "/material", "/progreso"]
+  "/solfeo", "/entrenamiento", "/lector", "/material", "/material/tapping-1", "/progreso"]
 
 for (const route of ROUTES) {
   test(`${route} carga sin errores`, async ({ page }) => {

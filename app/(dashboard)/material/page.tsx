@@ -16,6 +16,8 @@ type ClassEntry = {
   descripcion: string
   archivos: string[]
   areaId: string
+  pdf?: string                                   // hoja original de la clase
+  practica?: { href: string; label: string }     // práctica interactiva en la app
 }
 
 type TemaArea = {
@@ -140,6 +142,13 @@ const TEMAS: TemaArea[] = [
   {
     id: "tecnica", area: "Técnica", color: DEGREE_COLORS[5],
     entries: [{
+      fecha: "2026-10-05", fechaDisplay: "5 Oct 2026", areaId: "tecnica",
+      titulo: "Tapping 1 – Tapping Shredmaster Class",
+      descripcion: "Tapping a dos manos (Secretos del Shred): tap + pull-off en una cuerda, arpegios Am–G–F, nota pedal arriba o abajo, tap con slide y con bend, escala de Do mayor en tresillos por las 6 cuerdas, línea a la Richie Kotzen y tres notas por cuerda con tap. ♩ = 120.",
+      archivos: ["tapping-1-shredmaster.jpg"],
+      pdf: "tapping-1-shredmaster.pdf",
+      practica: { href: "/material/tapping-1", label: "Practicar con audio y tempo →" },
+    }, {
       fecha: "2026-01-15", fechaDisplay: "15 Ene 2026", areaId: "tecnica",
       titulo: "Retros – Secuencias escalísticas",
       descripcion: "Ejercicios de digitación sobre la escala: retros de 2, 3 y 4 notas, y desplazadas (1-3-2-4). En diesiseisavos (grupos 1-3) y tresillos/seisillos (grupo 4).",
@@ -724,6 +733,12 @@ export default function MaterialPage() {
                 <p style={{ fontSize: 14, color: "rgba(255,255,255,0.74)", margin: 0, lineHeight: 1.65 }}>
                   {modal.descripcion}
                 </p>
+                {(modal.practica || modal.pdf) && (
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {modal.practica && <a href={modal.practica.href} className="mc-play-btn" style={{ textDecoration: "none" }}>{modal.practica.label}</a>}
+                    {modal.pdf && <a href={`/clases/${modal.pdf}`} target="_blank" rel="noopener noreferrer" className="mc-btn-ghost" style={{ textDecoration: "none" }}>Abrir el PDF original</a>}
+                  </div>
+                )}
 
                 {/* Image viewer */}
                 {modal.archivos.length === 1 ? (
