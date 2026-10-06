@@ -229,6 +229,8 @@ export default function MaterialPage() {
   const [loading,    setLoading]    = useState(true)
   const [saving,     setSaving]     = useState(false)
   const [filter,     setFilter]     = useState<string>("all")
+  // Orden de las clases: por fecha (lo más reciente primero, por defecto) o agrupadas por tema
+  const [order,      setOrder]      = useState<"recientes" | "antiguas" | "tema">("recientes")
   const [modal,      setModal]      = useState<ClassEntry | null>(null)
   const [imgIndex,   setImgIndex]   = useState(0)
 
@@ -294,7 +296,10 @@ export default function MaterialPage() {
     if (selected?.id === id) setSelected(lessons.find(l => l.id !== id) ?? null)
   }
 
-  const visibleEntries = filter === "all" ? ALL_ENTRIES : ALL_ENTRIES.filter(e => e.areaId === filter)
+  const filtered = filter === "all" ? ALL_ENTRIES : ALL_ENTRIES.filter(e => e.areaId === filter)
+  // fecha en formato ISO (AAAA-MM-DD): se compara como texto
+  const visibleEntries = order === "tema" ? filtered
+    : [...filtered].sort((a, b) => order === "recientes" ? b.fecha.localeCompare(a.fecha) : a.fecha.localeCompare(b.fecha))
 
   return (
     <div className="flex flex-col gap-6">
@@ -331,6 +336,16 @@ export default function MaterialPage() {
       {/* ════════ TEMAS ════════ */}
       {tab === "temas" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+          {/* Orden */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span className="mc-eyebrow">Ordenar</span>
+            <div className="mm-seg" role="group" aria-label="Ordenar clases">
+              {([["recientes", "Más recientes"], ["antiguas", "Más antiguas"], ["tema", "Por tema"]] as const).map(([id, label]) => (
+                <button key={id} data-on={order === id || undefined} onClick={() => setOrder(id)}>{label}</button>
+              ))}
+            </div>
+          </div>
 
           {/* Filter chips */}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>

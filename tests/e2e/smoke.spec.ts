@@ -13,3 +13,18 @@ for (const route of ROUTES) {
     expect(errors, errors.join("\n")).toEqual([])
   })
 }
+
+test("Material: ordenar por fecha", async ({ page }) => {
+  await page.goto("/material", { waitUntil: "networkidle" })
+  const titles = () => page.locator("button:has(img) p").evaluateAll(ps => ps.filter((_, i) => i % 2 === 0).map(p => p.textContent ?? ""))
+  // Por defecto: lo más reciente primero
+  expect((await titles())[0]).toContain("Tapping 1")
+  await page.getByRole("button", { name: "Más antiguas" }).click()
+  expect((await titles())[0]).toContain("Sweep Picking")
+  // Funciona junto con el filtro por tema
+  await page.getByRole("button", { name: "TÉCNICA", exact: true }).click()
+  await page.getByRole("button", { name: "Más recientes" }).click()
+  const tecnica = await titles()
+  expect(tecnica[0]).toContain("Tapping 1")
+  expect(tecnica.length).toBe(2)
+})
